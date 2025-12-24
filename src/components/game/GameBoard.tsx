@@ -33,9 +33,12 @@ export const GameBoard = ({ game, onExit }: GameBoardProps) => {
   };
 
   const handleBack = () => {
-    if (currentQuestion && !currentQuestion.isReview) {
+    if (currentQuestion) {
       const cardId = `${currentQuestion.categoryIndex}-${currentQuestion.questionIndex}`;
-      setRevealedCards((prev) => new Set([...prev, cardId]));
+      // Only mark as revealed if it was visited (not just reviewed)
+      if (!currentQuestion.isReview) {
+        setRevealedCards((prev) => new Set([...prev, cardId]));
+      }
     }
     setCurrentQuestion(null);
   };
@@ -64,7 +67,7 @@ export const GameBoard = ({ game, onExit }: GameBoardProps) => {
       [player === 1 ? "player1" : "player2"]:
         prev[player === 1 ? "player1" : "player2"] + points,
     }));
-    handleBack();
+    // Don't auto-navigate back - user must click "Back to Board"
   };
 
   const handleReset = () => {
@@ -72,6 +75,11 @@ export const GameBoard = ({ game, onExit }: GameBoardProps) => {
     setCardAnswers({});
     setScores({ player1: 0, player2: 0 });
     setCurrentQuestion(null);
+  };
+
+  // Check if a card is "complete" (has an answer assigned)
+  const isCardComplete = (cardId: string) => {
+    return cardAnswers[cardId] !== undefined && cardAnswers[cardId] !== null;
   };
 
   if (isEditingNames) {
@@ -127,6 +135,7 @@ export const GameBoard = ({ game, onExit }: GameBoardProps) => {
   if (currentQuestion) {
     const category = game.categories[currentQuestion.categoryIndex];
     const question = category.questions[currentQuestion.questionIndex];
+    const cardId = `${currentQuestion.categoryIndex}-${currentQuestion.questionIndex}`;
     return (
       <QuestionScreen
         question={question}
@@ -136,6 +145,9 @@ export const GameBoard = ({ game, onExit }: GameBoardProps) => {
         onWrong={handleBack}
         player1Name={player1Name}
         player2Name={player2Name}
+        player1Score={scores.player1}
+        player2Score={scores.player2}
+        currentAnswer={cardAnswers[cardId]}
       />
     );
   }
@@ -189,6 +201,7 @@ export const GameBoard = ({ game, onExit }: GameBoardProps) => {
                   categoryIndex={colIndex}
                   questionIndex={rowIndex}
                   isRevealed={revealedCards.has(cardId)}
+                  isComplete={isCardComplete(cardId)}
                   onSelect={() => handleCardSelect(colIndex, rowIndex)}
                   onReview={() => handleReview(colIndex, rowIndex)}
                 />

@@ -6,6 +6,7 @@ interface GameCardProps {
   categoryIndex: number;
   questionIndex: number;
   isRevealed: boolean;
+  isComplete: boolean;
   onSelect: () => void;
   onReview?: () => void;
 }
@@ -13,6 +14,7 @@ interface GameCardProps {
 export const GameCard = ({
   question,
   isRevealed,
+  isComplete,
   onSelect,
   onReview,
 }: GameCardProps) => {
@@ -20,10 +22,23 @@ export const GameCard = ({
     return (
       <button
         onClick={onReview}
-        className="aspect-[4/3] rounded-xl bg-muted/40 border border-border/20 flex flex-col items-center justify-center gap-1 hover:bg-muted/60 transition-all group cursor-pointer"
+        className={`aspect-[4/3] rounded-xl flex flex-col items-center justify-center gap-1 transition-all group cursor-pointer ${
+          isComplete 
+            ? "bg-muted/40 border border-border/20 hover:bg-muted/60" 
+            : "bg-yellow/20 border-2 border-dashed border-yellow/50 hover:bg-yellow/30"
+        }`}
       >
-        <Check className="w-5 h-5 text-success" />
-        <Eye className="w-3 h-3 text-muted-foreground opacity-0 group-hover:opacity-100 transition-opacity" />
+        {isComplete ? (
+          <>
+            <Check className="w-5 h-5 text-success" />
+            <Eye className="w-3 h-3 text-muted-foreground opacity-0 group-hover:opacity-100 transition-opacity" />
+          </>
+        ) : (
+          <>
+            <Eye className="w-5 h-5 text-yellow" />
+            <span className="text-[10px] text-yellow font-medium">Review</span>
+          </>
+        )}
       </button>
     );
   }
