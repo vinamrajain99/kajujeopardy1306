@@ -13,9 +13,11 @@ interface GameBoardProps {
 
 export const GameBoard = ({ game, onExit }: GameBoardProps) => {
   const [revealedCards, setRevealedCards] = useState<Set<string>>(new Set());
+  const [cardAnswers, setCardAnswers] = useState<Record<string, 1 | 2 | null>>({});
   const [currentQuestion, setCurrentQuestion] = useState<{
     categoryIndex: number;
     questionIndex: number;
+    isReview?: boolean;
   } | null>(null);
   const [scores, setScores] = useState({ player1: 0, player2: 0 });
   const [player1Name, setPlayer1Name] = useState("Player 1");
@@ -23,11 +25,15 @@ export const GameBoard = ({ game, onExit }: GameBoardProps) => {
   const [isEditingNames, setIsEditingNames] = useState(true);
 
   const handleCardSelect = (categoryIndex: number, questionIndex: number) => {
-    setCurrentQuestion({ categoryIndex, questionIndex });
+    setCurrentQuestion({ categoryIndex, questionIndex, isReview: false });
+  };
+
+  const handleReview = (categoryIndex: number, questionIndex: number) => {
+    setCurrentQuestion({ categoryIndex, questionIndex, isReview: true });
   };
 
   const handleBack = () => {
-    if (currentQuestion) {
+    if (currentQuestion && !currentQuestion.isReview) {
       const cardId = `${currentQuestion.categoryIndex}-${currentQuestion.questionIndex}`;
       setRevealedCards((prev) => new Set([...prev, cardId]));
     }
@@ -36,10 +42,23 @@ export const GameBoard = ({ game, onExit }: GameBoardProps) => {
 
   const handleCorrect = (player: 1 | 2) => {
     if (!currentQuestion) return;
+    const cardId = `${currentQuestion.categoryIndex}-${currentQuestion.questionIndex}`;
     const points =
       game.categories[currentQuestion.categoryIndex].questions[
         currentQuestion.questionIndex
       ].points;
+    
+    // If reviewing and changing answer, adjust scores
+    const previousAnswer = cardAnswers[cardId];
+    if (previousAnswer) {
+      setScores((prev) => ({
+        ...prev,
+        [previousAnswer === 1 ? "player1" : "player2"]:
+          prev[previousAnswer === 1 ? "player1" : "player2"] - points,
+      }));
+    }
+    
+    setCardAnswers((prev) => ({ ...prev, [cardId]: player }));
     setScores((prev) => ({
       ...prev,
       [player === 1 ? "player1" : "player2"]:
@@ -50,53 +69,54 @@ export const GameBoard = ({ game, onExit }: GameBoardProps) => {
 
   const handleReset = () => {
     setRevealedCards(new Set());
+    setCardAnswers({});
     setScores({ player1: 0, player2: 0 });
     setCurrentQuestion(null);
   };
 
   if (isEditingNames) {
     return (
-      <div className="min-h-screen bg-background flex items-center justify-center p-4">
-        <div className="glass rounded-2xl p-8 max-w-md w-full animate-scale-in">
-          <h1 className="font-display text-4xl text-gold text-center mb-8">
+      <div className="min-h-screen bg-background confetti-bg flex items-center justify-center p-4">
+        <div className="glass rounded-2xl p-6 max-w-sm w-full animate-scale-in">
+          <h1 className="font-display text-2xl text-primary text-center mb-6">
             {game.name}
           </h1>
-          <div className="space-y-6">
+          <div className="space-y-4">
             <div>
-              <label className="block text-sm text-muted-foreground mb-2">
-                Player 1 Name
+              <label className="block text-xs text-muted-foreground mb-1 font-medium">
+                Player 1
               </label>
               <input
                 type="text"
                 value={player1Name}
                 onChange={(e) => setPlayer1Name(e.target.value)}
-                className="w-full bg-input border border-border rounded-lg px-4 py-3 text-foreground focus:ring-2 focus:ring-gold focus:border-transparent"
+                className="w-full bg-input border border-border rounded-lg px-3 py-2 text-sm text-foreground focus:ring-2 focus:ring-primary focus:border-transparent"
                 placeholder="Enter name"
               />
             </div>
             <div>
-              <label className="block text-sm text-muted-foreground mb-2">
-                Player 2 Name
+              <label className="block text-xs text-muted-foreground mb-1 font-medium">
+                Player 2
               </label>
               <input
                 type="text"
                 value={player2Name}
                 onChange={(e) => setPlayer2Name(e.target.value)}
-                className="w-full bg-input border border-border rounded-lg px-4 py-3 text-foreground focus:ring-2 focus:ring-gold focus:border-transparent"
+                className="w-full bg-input border border-border rounded-lg px-3 py-2 text-sm text-foreground focus:ring-2 focus:ring-primary focus:border-transparent"
                 placeholder="Enter name"
               />
             </div>
             <Button
               variant="gold"
-              size="xl"
+              size="lg"
               className="w-full"
               onClick={() => setIsEditingNames(false)}
             >
               Start Game
             </Button>
-            <Button variant="outline" className="w-full" onClick={onExit}>
-              <ArrowLeft className="w-4 h-4 mr-2" />
-              Back to Games
+            <Button variant="ghost" size="sm" className="w-full" onClick={onExit}>
+              <ArrowLeft className="w-4 h-4 mr-1" />
+              Back
             </Button>
           </div>
         </div>
@@ -121,36 +141,36 @@ export const GameBoard = ({ game, onExit }: GameBoardProps) => {
   }
 
   return (
-    <div className="min-h-screen bg-background p-4 md:p-6 lg:p-8">
+    <div className="min-h-screen bg-background confetti-bg p-3 md:p-4 lg:p-6">
       {/* Header */}
-      <div className="flex flex-col md:flex-row items-center justify-between gap-4 mb-6">
-        <div className="flex items-center gap-4">
-          <Button variant="outline" size="icon" onClick={onExit}>
-            <ArrowLeft className="w-5 h-5" />
+      <div className="flex flex-col md:flex-row items-center justify-between gap-3 mb-4">
+        <div className="flex items-center gap-3">
+          <Button variant="ghost" size="icon" onClick={onExit}>
+            <ArrowLeft className="w-4 h-4" />
           </Button>
-          <h1 className="font-display text-3xl md:text-4xl text-gold">
+          <h1 className="font-display text-xl md:text-2xl text-primary">
             {game.name}
           </h1>
         </div>
 
         {/* Scoreboard */}
-        <div className="flex items-center gap-6">
-          <div className="glass rounded-xl px-6 py-3 text-center">
-            <p className="text-sm text-muted-foreground">{player1Name}</p>
-            <p className="font-display text-2xl text-gold">${scores.player1}</p>
+        <div className="flex items-center gap-3">
+          <div className="glass rounded-lg px-3 py-1.5 text-center">
+            <p className="text-[10px] text-muted-foreground font-medium">{player1Name}</p>
+            <p className="font-display text-base text-pink">{scores.player1}</p>
           </div>
-          <div className="glass rounded-xl px-6 py-3 text-center">
-            <p className="text-sm text-muted-foreground">{player2Name}</p>
-            <p className="font-display text-2xl text-gold">${scores.player2}</p>
+          <div className="glass rounded-lg px-3 py-1.5 text-center">
+            <p className="text-[10px] text-muted-foreground font-medium">{player2Name}</p>
+            <p className="font-display text-base text-blue">{scores.player2}</p>
           </div>
-          <Button variant="outline" size="icon" onClick={handleReset}>
-            <RotateCcw className="w-5 h-5" />
+          <Button variant="ghost" size="icon" onClick={handleReset}>
+            <RotateCcw className="w-4 h-4" />
           </Button>
         </div>
       </div>
 
       {/* Game Grid */}
-      <div className="grid grid-cols-5 gap-3 md:gap-4">
+      <div className="grid grid-cols-5 gap-2 md:gap-3">
         {/* Category Headers */}
         {game.categories.map((category) => (
           <CategoryHeader key={category.id} name={category.name} />
@@ -170,6 +190,7 @@ export const GameBoard = ({ game, onExit }: GameBoardProps) => {
                   questionIndex={rowIndex}
                   isRevealed={revealedCards.has(cardId)}
                   onSelect={() => handleCardSelect(colIndex, rowIndex)}
+                  onReview={() => handleReview(colIndex, rowIndex)}
                 />
               );
             })}
