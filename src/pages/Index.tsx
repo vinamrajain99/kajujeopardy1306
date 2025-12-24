@@ -1,6 +1,6 @@
 import { useState } from "react";
 import { GameVersion } from "@/types/game";
-import { getStoredGames } from "@/lib/storage";
+import { getStoredGames, getGlobalSettings } from "@/lib/storage";
 import { GameBoard } from "@/components/game/GameBoard";
 import { AdminDashboard } from "@/components/admin/AdminDashboard";
 import { Button } from "@/components/ui/button";
@@ -52,12 +52,9 @@ const Index = () => {
     );
   }
 
-  // Get the first game's home screen texts or use defaults
-  const games = getStoredGames();
-  const currentGame = games.length > 0 ? games[0] : null;
-  const homeTexts = currentGame?.homeScreenTexts || [
-    { id: "1", text: "Gender Reveal Jeopardy!", style: "title" as const },
-  ];
+  // Get global home screen texts
+  const globalSettings = getGlobalSettings();
+  const homeTexts = globalSettings.homeScreenTexts;
 
   // Filter out subtitles from display (only show title and tagline)
   const displayTexts = homeTexts.filter(t => t.style !== 'subtitle');

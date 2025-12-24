@@ -33,7 +33,10 @@ export interface GameVersion {
   name: string;
   createdAt: string;
   categories: Category[];
-  homeScreenTexts?: HomeScreenText[];
+}
+
+export interface GlobalSettings {
+  homeScreenTexts: HomeScreenText[];
 }
 
 export interface GameState {
