@@ -53,5 +53,9 @@ export const createEmptyGame = (name: string): GameVersion => {
         points: defaultPoints[qIndex],
       })),
     })),
+    homeScreenTexts: [
+      { id: crypto.randomUUID(), text: "Gender Reveal Jeopardy!", style: "title" as const },
+      { id: crypto.randomUUID(), text: "The ultimate baby shower game", style: "subtitle" as const },
+    ],
   };
 };

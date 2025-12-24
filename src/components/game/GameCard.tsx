@@ -27,9 +27,9 @@ export const GameCard = ({
       className="flip-card aspect-[4/3] w-full cursor-pointer group"
     >
       <div className="flip-card-inner">
-        <div className="flip-card-front card-gradient rounded-lg border-2 border-gold/50 flex items-center justify-center hover:border-gold hover:glow-gold transition-all duration-300">
-          <span className="font-display text-3xl md:text-4xl lg:text-5xl text-gold text-shadow-glow group-hover:scale-110 transition-transform">
-            ${question.points}
+        <div className="flip-card-front card-gradient rounded-lg border-2 border-primary/50 flex items-center justify-center hover:border-primary hover:glow-primary transition-all duration-300">
+          <span className="font-display text-3xl md:text-4xl lg:text-5xl text-primary text-shadow-glow group-hover:scale-110 transition-transform">
+            {question.points} pts
           </span>
         </div>
       </div>

@@ -19,9 +19,9 @@ const buttonVariants = cva(
           "bg-secondary text-secondary-foreground hover:bg-secondary/80",
         ghost: "hover:bg-accent hover:text-accent-foreground",
         link: "text-primary underline-offset-4 hover:underline",
-        gold: "bg-gradient-to-r from-gold to-gold-dark text-primary-foreground font-bold shadow-lg hover:shadow-xl hover:scale-105 transition-transform",
-        game: "bg-card border-2 border-gold text-foreground hover:shadow-[0_0_20px_hsl(45_100%_50%/0.4)] hover:scale-105 transition-all font-display text-xl tracking-wider",
-        success: "bg-success text-foreground font-bold shadow-lg hover:opacity-90",
+        gold: "baby-gradient text-primary-foreground font-bold shadow-lg hover:shadow-xl hover:scale-105 transition-transform",
+        game: "bg-card border-2 border-primary text-foreground hover:shadow-[0_0_20px_hsl(var(--primary)/0.4)] hover:scale-105 transition-all font-display text-xl tracking-wider",
+        success: "bg-success text-white font-bold shadow-lg hover:opacity-90",
       },
       size: {
         default: "h-10 px-4 py-2",
