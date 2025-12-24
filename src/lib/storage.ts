@@ -60,21 +60,20 @@ export const createEmptyGame = (name: string): GameVersion => {
 // Global Settings
 export const getGlobalSettings = (): GlobalSettings => {
   const stored = localStorage.getItem(SETTINGS_KEY);
+  const defaultSettings: GlobalSettings = {
+    homeScreenTexts: [
+      { id: crypto.randomUUID(), text: "Gender Reveal Jeopardy!", style: "title" as const },
+    ],
+    colorTheme: 'babyShower',
+  };
   if (!stored) {
-    return {
-      homeScreenTexts: [
-        { id: crypto.randomUUID(), text: "Gender Reveal Jeopardy!", style: "title" as const },
-      ],
-    };
+    return defaultSettings;
   }
   try {
-    return JSON.parse(stored);
+    const parsed = JSON.parse(stored);
+    return { ...defaultSettings, ...parsed };
   } catch {
-    return {
-      homeScreenTexts: [
-        { id: crypto.randomUUID(), text: "Gender Reveal Jeopardy!", style: "title" as const },
-      ],
-    };
+    return defaultSettings;
   }
 };
 

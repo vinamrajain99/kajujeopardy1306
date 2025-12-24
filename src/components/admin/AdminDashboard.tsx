@@ -1,10 +1,18 @@
 import { useState, useEffect } from "react";
-import { GameVersion, HomeScreenText } from "@/types/game";
+import { GameVersion, HomeScreenText, ColorTheme } from "@/types/game";
 import { getStoredGames, deleteGame, createEmptyGame, saveGame, getGlobalSettings, saveGlobalSettings } from "@/lib/storage";
 import { GameEditor } from "./GameEditor";
 import { Button } from "@/components/ui/button";
-import { Plus, Trash2, Edit, Play, ArrowLeft, Type, Save } from "lucide-react";
+import { Plus, Trash2, Edit, Play, ArrowLeft, Type, Save, Palette } from "lucide-react";
 import { toast } from "sonner";
+
+const COLOR_THEMES: { id: ColorTheme; name: string; colors: string[] }[] = [
+  { id: 'babyShower', name: 'Baby Shower', colors: ['#FFB6C1', '#87CEEB', '#FFFACD', '#98FB98', '#E6E6FA'] },
+  { id: 'ocean', name: 'Ocean Breeze', colors: ['#0077B6', '#00B4D8', '#90E0EF', '#CAF0F8', '#023E8A'] },
+  { id: 'sunset', name: 'Sunset Glow', colors: ['#FF6B6B', '#FFA07A', '#FFD93D', '#FF8C42', '#C44536'] },
+  { id: 'forest', name: 'Forest Green', colors: ['#2D6A4F', '#40916C', '#52B788', '#74C69D', '#95D5B2'] },
+  { id: 'royal', name: 'Royal Purple', colors: ['#7B2CBF', '#9D4EDD', '#C77DFF', '#E0AAFF', '#5A189A'] },
+];
 
 interface AdminDashboardProps {
   onPlayGame: (game: GameVersion) => void;
@@ -16,10 +24,13 @@ export const AdminDashboard = ({ onPlayGame, onBack }: AdminDashboardProps) => {
   const [editingGame, setEditingGame] = useState<GameVersion | null>(null);
   const [showHomeScreenEditor, setShowHomeScreenEditor] = useState(false);
   const [homeScreenTexts, setHomeScreenTexts] = useState<HomeScreenText[]>([]);
+  const [colorTheme, setColorTheme] = useState<ColorTheme>('babyShower');
 
   useEffect(() => {
     setGames(getStoredGames());
-    setHomeScreenTexts(getGlobalSettings().homeScreenTexts);
+    const settings = getGlobalSettings();
+    setHomeScreenTexts(settings.homeScreenTexts);
+    setColorTheme(settings.colorTheme);
   }, []);
 
   const handleCreateGame = () => {
@@ -69,10 +80,63 @@ export const AdminDashboard = ({ onPlayGame, onBack }: AdminDashboardProps) => {
   };
 
   const saveHomeScreenSettings = () => {
-    saveGlobalSettings({ homeScreenTexts });
+    saveGlobalSettings({ homeScreenTexts, colorTheme });
     toast.success("Home screen settings saved!");
     setShowHomeScreenEditor(false);
   };
+
+  const handleColorThemeChange = (theme: ColorTheme) => {
+    setColorTheme(theme);
+    saveGlobalSettings({ ...getGlobalSettings(), colorTheme: theme });
+    applyColorTheme(theme);
+    toast.success(`Theme changed to ${COLOR_THEMES.find(t => t.id === theme)?.name}!`);
+  };
+
+  const applyColorTheme = (theme: ColorTheme) => {
+    const root = document.documentElement;
+    switch (theme) {
+      case 'babyShower':
+        root.style.setProperty('--pink', '350 80% 80%');
+        root.style.setProperty('--blue', '200 80% 70%');
+        root.style.setProperty('--yellow', '50 95% 75%');
+        root.style.setProperty('--mint', '150 60% 75%');
+        root.style.setProperty('--lavender', '270 60% 85%');
+        break;
+      case 'ocean':
+        root.style.setProperty('--pink', '200 100% 40%');
+        root.style.setProperty('--blue', '195 100% 45%');
+        root.style.setProperty('--yellow', '195 80% 72%');
+        root.style.setProperty('--mint', '195 60% 85%');
+        root.style.setProperty('--lavender', '220 100% 25%');
+        break;
+      case 'sunset':
+        root.style.setProperty('--pink', '0 100% 71%');
+        root.style.setProperty('--blue', '17 100% 73%');
+        root.style.setProperty('--yellow', '48 100% 62%');
+        root.style.setProperty('--mint', '24 100% 63%');
+        root.style.setProperty('--lavender', '7 54% 49%');
+        break;
+      case 'forest':
+        root.style.setProperty('--pink', '153 50% 30%');
+        root.style.setProperty('--blue', '153 40% 40%');
+        root.style.setProperty('--yellow', '153 45% 50%');
+        root.style.setProperty('--mint', '150 45% 60%');
+        root.style.setProperty('--lavender', '150 40% 70%');
+        break;
+      case 'royal':
+        root.style.setProperty('--pink', '280 70% 46%');
+        root.style.setProperty('--blue', '280 60% 58%');
+        root.style.setProperty('--yellow', '280 50% 74%');
+        root.style.setProperty('--mint', '280 45% 86%');
+        root.style.setProperty('--lavender', '280 80% 32%');
+        break;
+    }
+  };
+
+  // Apply theme on mount
+  useEffect(() => {
+    applyColorTheme(colorTheme);
+  }, [colorTheme]);
 
   if (editingGame) {
     return (
@@ -168,7 +232,7 @@ export const AdminDashboard = ({ onPlayGame, onBack }: AdminDashboardProps) => {
             </Button>
             <h1 className="font-display text-4xl text-primary">Admin Dashboard</h1>
           </div>
-          <div className="flex items-center gap-2">
+          <div className="flex items-center gap-2 flex-wrap">
             <Button variant="outline" onClick={() => setShowHomeScreenEditor(true)}>
               <Type className="w-4 h-4 mr-2" />
               Home Screen
@@ -177,6 +241,38 @@ export const AdminDashboard = ({ onPlayGame, onBack }: AdminDashboardProps) => {
               <Plus className="w-5 h-5 mr-2" />
               New Game
             </Button>
+          </div>
+        </div>
+
+        {/* Color Theme Selector */}
+        <div className="glass rounded-xl p-4 mb-6">
+          <div className="flex items-center gap-2 mb-3">
+            <Palette className="w-5 h-5 text-primary" />
+            <h3 className="font-display text-lg text-foreground">Color Theme</h3>
+          </div>
+          <div className="grid grid-cols-2 md:grid-cols-5 gap-3">
+            {COLOR_THEMES.map((theme) => (
+              <button
+                key={theme.id}
+                onClick={() => handleColorThemeChange(theme.id)}
+                className={`p-3 rounded-lg border-2 transition-all ${
+                  colorTheme === theme.id
+                    ? 'border-primary glow-primary'
+                    : 'border-border hover:border-primary/50'
+                }`}
+              >
+                <div className="flex gap-1 mb-2 justify-center">
+                  {theme.colors.map((color, i) => (
+                    <div
+                      key={i}
+                      className="w-4 h-4 rounded-full"
+                      style={{ backgroundColor: color }}
+                    />
+                  ))}
+                </div>
+                <p className="text-xs font-medium text-center">{theme.name}</p>
+              </button>
+            ))}
           </div>
         </div>
 

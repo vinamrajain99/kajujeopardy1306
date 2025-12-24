@@ -95,7 +95,7 @@ const Index = () => {
             );
           } else {
             return (
-              <p key={item.id} className="text-sm text-foreground/70 mb-3 animate-fade-in italic">
+              <p key={item.id} className="text-sm text-foreground/70 mb-3 animate-fade-in italic font-bold">
                 {item.text}
               </p>
             );
@@ -124,18 +124,6 @@ const Index = () => {
           </Button>
         </div>
 
-        {/* Quick Stats */}
-        <div className="mt-10 glass rounded-xl py-3 px-5 inline-block animate-fade-in">
-          <p className="text-xs text-muted-foreground">
-            {getStoredGames().length === 0 ? (
-              "No games configured yet"
-            ) : (
-              `${getStoredGames().length} game${
-                getStoredGames().length > 1 ? "s" : ""
-              } ready`
-            )}
-          </p>
-        </div>
       </div>
     </div>
   );
