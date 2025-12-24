@@ -48,8 +48,14 @@ export const QuestionScreen = ({
   };
 
   const handlePlayerSelect = (player: 1 | 2) => {
-    setSelectedPlayer(player);
-    onCorrect(player);
+    if (selectedPlayer === player) {
+      // Deselect if clicking the same player
+      setSelectedPlayer(null);
+      onCorrect(player); // This will toggle off
+    } else {
+      setSelectedPlayer(player);
+      onCorrect(player);
+    }
   };
 
   return (
@@ -179,6 +185,23 @@ export const QuestionScreen = ({
       {/* Action Buttons - Fixed at Bottom */}
       <div className="flex flex-wrap justify-center gap-3 mt-4 pt-4 border-t border-border/30">
         <Button
+          variant={selectedPlayer === 1 ? "default" : "outline"}
+          size="default"
+          onClick={() => handlePlayerSelect(1)}
+          className={selectedPlayer === 1 ? "bg-pink hover:bg-pink/90" : ""}
+        >
+          {player1Name} {selectedPlayer === 1 && "✓"}
+        </Button>
+        <Button
+          variant={selectedPlayer === 2 ? "default" : "outline"}
+          size="default"
+          onClick={() => handlePlayerSelect(2)}
+          className={selectedPlayer === 2 ? "bg-blue hover:bg-blue/90" : ""}
+        >
+          {player2Name} {selectedPlayer === 2 && "✓"}
+        </Button>
+
+        <Button
           variant="gold"
           size="default"
           onClick={() => setShowAnswer(true)}
@@ -187,27 +210,6 @@ export const QuestionScreen = ({
           <Eye className="w-4 h-4 mr-2" />
           Reveal Answer
         </Button>
-
-        {showAnswer && (
-          <>
-            <Button
-              variant={selectedPlayer === 1 ? "default" : "outline"}
-              size="default"
-              onClick={() => handlePlayerSelect(1)}
-              className={`animate-scale-in ${selectedPlayer === 1 ? "bg-pink hover:bg-pink/90" : ""}`}
-            >
-              {player1Name} {selectedPlayer === 1 && "✓"}
-            </Button>
-            <Button
-              variant={selectedPlayer === 2 ? "default" : "outline"}
-              size="default"
-              onClick={() => handlePlayerSelect(2)}
-              className={`animate-scale-in ${selectedPlayer === 2 ? "bg-blue hover:bg-blue/90" : ""}`}
-            >
-              {player2Name} {selectedPlayer === 2 && "✓"}
-            </Button>
-          </>
-        )}
 
         <Button variant="outline" size="default" onClick={onBack}>
           <ArrowLeft className="w-4 h-4 mr-2" />

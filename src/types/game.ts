@@ -35,8 +35,11 @@ export interface GameVersion {
   categories: Category[];
 }
 
+export type ColorTheme = 'babyShower' | 'ocean' | 'sunset' | 'forest' | 'royal';
+
 export interface GlobalSettings {
   homeScreenTexts: HomeScreenText[];
+  colorTheme: ColorTheme;
 }
 
 export interface GameState {
