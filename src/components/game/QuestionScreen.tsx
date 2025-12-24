@@ -52,8 +52,8 @@ export const QuestionScreen = ({
             <span className="text-muted-foreground text-sm uppercase tracking-wider">
               {categoryName}
             </span>
-            <h2 className="font-display text-2xl md:text-3xl text-gold">
-              ${question.points}
+            <h2 className="font-display text-2xl md:text-3xl text-primary">
+              {question.points} points
             </h2>
           </div>
         </div>
@@ -77,16 +77,16 @@ export const QuestionScreen = ({
                     onClick={() => handleOptionSelect(index)}
                     className={`p-4 rounded-xl border-2 text-left transition-all ${
                       selectedOption === index
-                        ? "border-gold bg-gold/10 glow-gold"
-                        : "border-border hover:border-gold/50"
+                        ? "border-primary bg-primary/10 glow-primary"
+                        : "border-border hover:border-primary/50"
                     } ${
-                      showAnswer && index === question.correctAnswerIndex
+                      showAnswer && option.isCorrect
                         ? "border-success bg-success/20"
                         : ""
                     } ${
                       showAnswer &&
                       selectedOption === index &&
-                      index !== question.correctAnswerIndex
+                      !option.isCorrect
                         ? "border-destructive bg-destructive/20"
                         : ""
                     }`}
@@ -96,12 +96,12 @@ export const QuestionScreen = ({
                         {String.fromCharCode(65 + index)}
                       </span>
                       <span className="text-lg">{option.text}</span>
-                      {showAnswer && index === question.correctAnswerIndex && (
+                      {showAnswer && option.isCorrect && (
                         <Check className="w-5 h-5 text-success ml-auto" />
                       )}
                       {showAnswer &&
                         selectedOption === index &&
-                        index !== question.correctAnswerIndex && (
+                        !option.isCorrect && (
                           <X className="w-5 h-5 text-destructive ml-auto" />
                         )}
                     </div>

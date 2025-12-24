@@ -2,6 +2,7 @@ export interface MCQOption {
   id: string;
   text: string;
   imageUrl?: string;
+  isCorrect?: boolean;
 }
 
 export interface Question {
@@ -9,7 +10,7 @@ export interface Question {
   text: string;
   isMCQ: boolean;
   options: MCQOption[];
-  correctAnswerIndex?: number;
+  correctAnswerIndex?: number; // kept for backward compatibility
   answer: string;
   images: string[];
   points: number;
@@ -21,11 +22,18 @@ export interface Category {
   questions: Question[];
 }
 
+export interface HomeScreenText {
+  id: string;
+  text: string;
+  style: 'title' | 'subtitle' | 'tagline';
+}
+
 export interface GameVersion {
   id: string;
   name: string;
   createdAt: string;
   categories: Category[];
+  homeScreenTexts?: HomeScreenText[];
 }
 
 export interface GameState {

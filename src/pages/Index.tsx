@@ -4,7 +4,7 @@ import { getStoredGames } from "@/lib/storage";
 import { GameBoard } from "@/components/game/GameBoard";
 import { AdminDashboard } from "@/components/admin/AdminDashboard";
 import { Button } from "@/components/ui/button";
-import { Play, Settings, Gamepad2 } from "lucide-react";
+import { Play, Settings, Sparkles } from "lucide-react";
 
 type View = "home" | "game" | "admin";
 
@@ -52,33 +52,65 @@ const Index = () => {
     );
   }
 
+  // Get the first game's home screen texts or use defaults
+  const games = getStoredGames();
+  const currentGame = games.length > 0 ? games[0] : null;
+  const homeTexts = currentGame?.homeScreenTexts || [
+    { id: "1", text: "Gender Reveal Jeopardy!", style: "title" as const },
+    { id: "2", text: "The ultimate baby shower game", style: "subtitle" as const },
+  ];
+
   return (
     <div className="min-h-screen bg-background flex flex-col items-center justify-center p-4 relative overflow-hidden">
       {/* Background decorations */}
       <div className="absolute inset-0 overflow-hidden pointer-events-none">
-        <div className="absolute top-1/4 left-1/4 w-96 h-96 bg-gold/5 rounded-full blur-3xl" />
-        <div className="absolute bottom-1/4 right-1/4 w-96 h-96 bg-accent/5 rounded-full blur-3xl" />
+        <div className="absolute top-1/4 left-1/4 w-96 h-96 bg-pink/20 rounded-full blur-3xl" />
+        <div className="absolute bottom-1/4 right-1/4 w-96 h-96 bg-blue/20 rounded-full blur-3xl" />
+        <div className="absolute top-1/2 left-1/2 -translate-x-1/2 -translate-y-1/2 w-[600px] h-[600px] bg-yellow/10 rounded-full blur-3xl" />
+      </div>
+
+      {/* Floating decorations */}
+      <div className="absolute inset-0 pointer-events-none">
+        <Sparkles className="absolute top-20 left-20 w-8 h-8 text-yellow animate-pulse" />
+        <Sparkles className="absolute top-32 right-32 w-6 h-6 text-pink animate-pulse" />
+        <Sparkles className="absolute bottom-40 left-40 w-10 h-10 text-blue animate-pulse" />
+        <Sparkles className="absolute bottom-20 right-20 w-8 h-8 text-mint animate-pulse" />
       </div>
 
       {/* Main Content */}
       <div className="relative z-10 text-center max-w-2xl mx-auto">
         {/* Logo/Icon */}
         <div className="mb-8 animate-scale-in">
-          <div className="w-24 h-24 mx-auto rounded-2xl gold-gradient flex items-center justify-center shadow-2xl glow-gold">
-            <Gamepad2 className="w-12 h-12 text-primary-foreground" />
+          <div className="w-24 h-24 mx-auto rounded-full baby-gradient flex items-center justify-center shadow-2xl glow-primary">
+            <span className="text-4xl">👶</span>
           </div>
         </div>
 
-        {/* Title */}
-        <h1 className="font-display text-6xl md:text-8xl text-gold text-shadow-glow mb-4 animate-fade-in">
-          JEOPARDY!
-        </h1>
-        <p className="text-xl text-muted-foreground mb-12 animate-fade-in">
-          The ultimate trivia game experience
-        </p>
+        {/* Dynamic Home Screen Texts */}
+        {homeTexts.map((item) => {
+          if (item.style === 'title') {
+            return (
+              <h1 key={item.id} className="font-display text-5xl md:text-7xl text-primary text-shadow-glow mb-4 animate-fade-in">
+                {item.text}
+              </h1>
+            );
+          } else if (item.style === 'subtitle') {
+            return (
+              <p key={item.id} className="text-xl text-muted-foreground mb-8 animate-fade-in">
+                {item.text}
+              </p>
+            );
+          } else {
+            return (
+              <p key={item.id} className="text-lg text-foreground/80 mb-4 animate-fade-in italic">
+                {item.text}
+              </p>
+            );
+          }
+        })}
 
         {/* Action Buttons */}
-        <div className="flex flex-col sm:flex-row items-center justify-center gap-4 animate-fade-in">
+        <div className="flex flex-col sm:flex-row items-center justify-center gap-4 animate-fade-in mt-8">
           <Button
             variant="gold"
             size="xl"
