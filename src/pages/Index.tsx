@@ -57,52 +57,48 @@ const Index = () => {
   const currentGame = games.length > 0 ? games[0] : null;
   const homeTexts = currentGame?.homeScreenTexts || [
     { id: "1", text: "Gender Reveal Jeopardy!", style: "title" as const },
-    { id: "2", text: "The ultimate baby shower game", style: "subtitle" as const },
   ];
 
+  // Filter out subtitles from display (only show title and tagline)
+  const displayTexts = homeTexts.filter(t => t.style !== 'subtitle');
+
   return (
-    <div className="min-h-screen bg-background flex flex-col items-center justify-center p-4 relative overflow-hidden">
+    <div className="min-h-screen bg-background confetti-bg flex flex-col items-center justify-center p-4 relative overflow-hidden">
       {/* Background decorations */}
       <div className="absolute inset-0 overflow-hidden pointer-events-none">
-        <div className="absolute top-1/4 left-1/4 w-96 h-96 bg-pink/20 rounded-full blur-3xl" />
-        <div className="absolute bottom-1/4 right-1/4 w-96 h-96 bg-blue/20 rounded-full blur-3xl" />
-        <div className="absolute top-1/2 left-1/2 -translate-x-1/2 -translate-y-1/2 w-[600px] h-[600px] bg-yellow/10 rounded-full blur-3xl" />
+        <div className="absolute top-1/4 left-1/4 w-72 h-72 bg-pink/15 rounded-full blur-3xl" />
+        <div className="absolute bottom-1/4 right-1/4 w-72 h-72 bg-blue/15 rounded-full blur-3xl" />
+        <div className="absolute top-1/2 left-1/2 -translate-x-1/2 -translate-y-1/2 w-96 h-96 bg-yellow/10 rounded-full blur-3xl" />
       </div>
 
       {/* Floating decorations */}
       <div className="absolute inset-0 pointer-events-none">
-        <Sparkles className="absolute top-20 left-20 w-8 h-8 text-yellow animate-pulse" />
-        <Sparkles className="absolute top-32 right-32 w-6 h-6 text-pink animate-pulse" />
-        <Sparkles className="absolute bottom-40 left-40 w-10 h-10 text-blue animate-pulse" />
-        <Sparkles className="absolute bottom-20 right-20 w-8 h-8 text-mint animate-pulse" />
+        <Sparkles className="absolute top-20 left-20 w-5 h-5 text-yellow animate-pulse" />
+        <Sparkles className="absolute top-32 right-32 w-4 h-4 text-pink animate-pulse" />
+        <Sparkles className="absolute bottom-40 left-40 w-6 h-6 text-blue animate-pulse" />
+        <Sparkles className="absolute bottom-20 right-20 w-5 h-5 text-mint animate-pulse" />
       </div>
 
       {/* Main Content */}
-      <div className="relative z-10 text-center max-w-2xl mx-auto">
+      <div className="relative z-10 text-center max-w-xl mx-auto">
         {/* Logo/Icon */}
-        <div className="mb-8 animate-scale-in">
-          <div className="w-24 h-24 mx-auto rounded-full baby-gradient flex items-center justify-center shadow-2xl glow-primary">
-            <span className="text-4xl">👶</span>
+        <div className="mb-6 animate-scale-in">
+          <div className="w-16 h-16 mx-auto rounded-full baby-gradient flex items-center justify-center shadow-lg">
+            <span className="text-2xl">👶</span>
           </div>
         </div>
 
-        {/* Dynamic Home Screen Texts */}
-        {homeTexts.map((item) => {
+        {/* Dynamic Home Screen Texts - Only title and tagline */}
+        {displayTexts.map((item) => {
           if (item.style === 'title') {
             return (
-              <h1 key={item.id} className="font-display text-5xl md:text-7xl text-primary text-shadow-glow mb-4 animate-fade-in">
+              <h1 key={item.id} className="font-display text-3xl md:text-4xl lg:text-5xl text-primary mb-4 animate-fade-in leading-tight">
                 {item.text}
               </h1>
             );
-          } else if (item.style === 'subtitle') {
-            return (
-              <p key={item.id} className="text-xl text-muted-foreground mb-8 animate-fade-in">
-                {item.text}
-              </p>
-            );
           } else {
             return (
-              <p key={item.id} className="text-lg text-foreground/80 mb-4 animate-fade-in italic">
+              <p key={item.id} className="text-sm text-foreground/70 mb-3 animate-fade-in italic">
                 {item.text}
               </p>
             );
@@ -110,36 +106,36 @@ const Index = () => {
         })}
 
         {/* Action Buttons */}
-        <div className="flex flex-col sm:flex-row items-center justify-center gap-4 animate-fade-in mt-8">
+        <div className="flex flex-col items-center gap-3 animate-fade-in mt-6">
           <Button
             variant="gold"
-            size="xl"
+            size="lg"
             onClick={handleSelectGameToPlay}
-            className="min-w-[200px] animate-pulse-glow"
+            className="min-w-[180px] animate-pulse-glow"
           >
-            <Play className="w-6 h-6 mr-2" />
+            <Play className="w-5 h-5 mr-2" />
             Play Game
           </Button>
           <Button
-            variant="outline"
-            size="xl"
+            variant="ghost"
+            size="sm"
             onClick={() => setView("admin")}
-            className="min-w-[200px]"
+            className="text-muted-foreground hover:text-foreground"
           >
-            <Settings className="w-6 h-6 mr-2" />
-            Admin Panel
+            <Settings className="w-4 h-4 mr-1" />
+            Admin
           </Button>
         </div>
 
         {/* Quick Stats */}
-        <div className="mt-16 glass rounded-2xl p-6 inline-block animate-fade-in">
-          <p className="text-sm text-muted-foreground">
+        <div className="mt-10 glass rounded-xl py-3 px-5 inline-block animate-fade-in">
+          <p className="text-xs text-muted-foreground">
             {getStoredGames().length === 0 ? (
-              "No games configured yet. Head to Admin Panel to create one!"
+              "No games configured yet"
             ) : (
               `${getStoredGames().length} game${
                 getStoredGames().length > 1 ? "s" : ""
-              } ready to play`
+              } ready`
             )}
           </p>
         </div>
