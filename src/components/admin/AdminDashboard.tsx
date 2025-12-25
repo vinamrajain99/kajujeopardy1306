@@ -1,5 +1,5 @@
 import { useState, useEffect } from "react";
-import { GameVersion, HomeScreenText, ColorTheme } from "@/types/game";
+import { GameVersion, HomeScreenSettings, HomeScreenImage, ColorTheme } from "@/types/game";
 import { getStoredGames, deleteGame, createEmptyGame, saveGame, getGlobalSettings, saveGlobalSettings } from "@/lib/storage";
 import { GameEditor } from "./GameEditor";
 import { Button } from "@/components/ui/button";
@@ -19,11 +19,27 @@ interface AdminDashboardProps {
   onBack: () => void;
 }
 
+const HOME_SCREEN_IMAGES: { id: HomeScreenImage; emoji: string; name: string }[] = [
+  { id: 'baby', emoji: '👶', name: 'Baby' },
+  { id: 'stork', emoji: '🦢', name: 'Stork' },
+  { id: 'rattle', emoji: '🎀', name: 'Rattle' },
+  { id: 'bottle', emoji: '🍼', name: 'Bottle' },
+  { id: 'footprints', emoji: '👣', name: 'Footprints' },
+  { id: 'heart', emoji: '💕', name: 'Heart' },
+  { id: 'star', emoji: '⭐', name: 'Star' },
+  { id: 'balloon', emoji: '🎈', name: 'Balloon' },
+  { id: 'cake', emoji: '🎂', name: 'Cake' },
+  { id: 'gift', emoji: '🎁', name: 'Gift' },
+];
+
 export const AdminDashboard = ({ onPlayGame, onBack }: AdminDashboardProps) => {
   const [games, setGames] = useState<GameVersion[]>([]);
   const [editingGame, setEditingGame] = useState<GameVersion | null>(null);
   const [showHomeScreenEditor, setShowHomeScreenEditor] = useState(false);
-  const [homeScreenTexts, setHomeScreenTexts] = useState<HomeScreenText[]>([]);
+  const [homeScreen, setHomeScreen] = useState<HomeScreenSettings>({
+    heading: "Gender Reveal Jeopardy!",
+    image: 'baby',
+  });
   const [colorTheme, setColorTheme] = useState<ColorTheme>('babyShower');
   const [timerEnabled, setTimerEnabled] = useState(false);
   const [timerDuration, setTimerDuration] = useState(30);
@@ -31,7 +47,7 @@ export const AdminDashboard = ({ onPlayGame, onBack }: AdminDashboardProps) => {
   useEffect(() => {
     setGames(getStoredGames());
     const settings = getGlobalSettings();
-    setHomeScreenTexts(settings.homeScreenTexts);
+    setHomeScreen(settings.homeScreen);
     setColorTheme(settings.colorTheme);
     setTimerEnabled(settings.timerEnabled);
     setTimerDuration(settings.timerDuration);
@@ -58,33 +74,14 @@ export const AdminDashboard = ({ onPlayGame, onBack }: AdminDashboardProps) => {
     setGames(getStoredGames());
   };
 
-  const addHomeScreenText = (style: 'title' | 'subtitle' | 'tagline') => {
-    const newText: HomeScreenText = {
-      id: crypto.randomUUID(),
-      text: style === 'title' ? 'New Title' : style === 'subtitle' ? 'New Subtitle' : 'New Tagline',
-      style,
-    };
-    setHomeScreenTexts((prev) => [...prev, newText]);
-  };
-
-  const updateHomeScreenText = (id: string, text: string) => {
-    setHomeScreenTexts((prev) =>
-      prev.map((t) => (t.id === id ? { ...t, text } : t))
-    );
-  };
-
-  const updateHomeScreenTextStyle = (id: string, style: 'title' | 'subtitle' | 'tagline') => {
-    setHomeScreenTexts((prev) =>
-      prev.map((t) => (t.id === id ? { ...t, style } : t))
-    );
-  };
-
-  const removeHomeScreenText = (id: string) => {
-    setHomeScreenTexts((prev) => prev.filter((t) => t.id !== id));
-  };
-
   const saveHomeScreenSettings = () => {
-    saveGlobalSettings({ homeScreenTexts, colorTheme, timerEnabled, timerDuration });
+    saveGlobalSettings({ 
+      homeScreenTexts: [], 
+      homeScreen, 
+      colorTheme, 
+      timerEnabled, 
+      timerDuration 
+    });
     toast.success("Home screen settings saved!");
     setShowHomeScreenEditor(false);
   };
@@ -186,57 +183,77 @@ export const AdminDashboard = ({ onPlayGame, onBack }: AdminDashboardProps) => {
 
           <div className="glass rounded-xl p-6">
             <p className="text-muted-foreground mb-6 text-sm">
-              Customize the text displayed on the game's home screen. These settings apply to all games.
+              Customize the text and image displayed on the game's home screen.
             </p>
 
-            <div className="space-y-4 mb-6">
-              {homeScreenTexts.map((item) => (
-                <div key={item.id} className="flex items-start gap-4 p-4 bg-muted/50 rounded-lg">
-                  <div className="flex-1 space-y-2">
-                    <input
-                      type="text"
-                      value={item.text}
-                      onChange={(e) => updateHomeScreenText(item.id, e.target.value)}
-                      className="w-full bg-input border border-border rounded-lg px-4 py-3 text-foreground focus:ring-2 focus:ring-primary focus:border-transparent"
-                    />
-                    <select
-                      value={item.style}
-                      onChange={(e) => updateHomeScreenTextStyle(item.id, e.target.value as 'title' | 'subtitle' | 'tagline')}
-                      className="bg-input border border-border rounded-lg px-4 py-2 text-foreground focus:ring-2 focus:ring-primary focus:border-transparent"
+            <div className="space-y-6">
+              {/* Heading */}
+              <div>
+                <label className="block text-sm font-medium text-foreground mb-2">
+                  Heading (optional)
+                </label>
+                <input
+                  type="text"
+                  value={homeScreen.heading || ''}
+                  onChange={(e) => setHomeScreen(prev => ({ ...prev, heading: e.target.value || undefined }))}
+                  placeholder="Enter heading..."
+                  className="w-full bg-input border border-border rounded-lg px-4 py-3 text-foreground focus:ring-2 focus:ring-primary focus:border-transparent"
+                />
+              </div>
+
+              {/* Subheading */}
+              <div>
+                <label className="block text-sm font-medium text-foreground mb-2">
+                  Subheading (optional)
+                </label>
+                <input
+                  type="text"
+                  value={homeScreen.subheading || ''}
+                  onChange={(e) => setHomeScreen(prev => ({ ...prev, subheading: e.target.value || undefined }))}
+                  placeholder="Enter subheading..."
+                  className="w-full bg-input border border-border rounded-lg px-4 py-3 text-foreground focus:ring-2 focus:ring-primary focus:border-transparent"
+                />
+              </div>
+
+              {/* Tagline */}
+              <div>
+                <label className="block text-sm font-medium text-foreground mb-2">
+                  Tagline (optional)
+                </label>
+                <input
+                  type="text"
+                  value={homeScreen.tagline || ''}
+                  onChange={(e) => setHomeScreen(prev => ({ ...prev, tagline: e.target.value || undefined }))}
+                  placeholder="Enter tagline..."
+                  className="w-full bg-input border border-border rounded-lg px-4 py-3 text-foreground focus:ring-2 focus:ring-primary focus:border-transparent"
+                />
+              </div>
+
+              {/* Image Selection */}
+              <div>
+                <label className="block text-sm font-medium text-foreground mb-3">
+                  Home Screen Image
+                </label>
+                <div className="grid grid-cols-5 gap-3">
+                  {HOME_SCREEN_IMAGES.map((img) => (
+                    <button
+                      key={img.id}
+                      onClick={() => setHomeScreen(prev => ({ ...prev, image: img.id }))}
+                      className={`p-3 rounded-lg border-2 transition-all flex flex-col items-center gap-1 ${
+                        homeScreen.image === img.id
+                          ? 'border-primary glow-primary bg-primary/10'
+                          : 'border-border hover:border-primary/50'
+                      }`}
                     >
-                      <option value="title">Title (Large)</option>
-                      <option value="subtitle">Subtitle (Medium)</option>
-                      <option value="tagline">Tagline (Small, Italic)</option>
-                    </select>
-                  </div>
-                  <Button
-                    variant="ghost"
-                    size="icon"
-                    onClick={() => removeHomeScreenText(item.id)}
-                    className="text-destructive hover:text-destructive"
-                  >
-                    <Trash2 className="w-4 h-4" />
-                  </Button>
+                      <span className="text-2xl">{img.emoji}</span>
+                      <span className="text-xs text-muted-foreground">{img.name}</span>
+                    </button>
+                  ))}
                 </div>
-              ))}
+              </div>
             </div>
 
-            <div className="flex gap-2 flex-wrap mb-6">
-              <Button variant="outline" size="sm" onClick={() => addHomeScreenText('title')}>
-                <Plus className="w-4 h-4 mr-2" />
-                Add Title
-              </Button>
-              <Button variant="outline" size="sm" onClick={() => addHomeScreenText('subtitle')}>
-                <Plus className="w-4 h-4 mr-2" />
-                Add Subtitle
-              </Button>
-              <Button variant="outline" size="sm" onClick={() => addHomeScreenText('tagline')}>
-                <Plus className="w-4 h-4 mr-2" />
-                Add Tagline
-              </Button>
-            </div>
-
-            <Button variant="gold" onClick={saveHomeScreenSettings}>
+            <Button variant="gold" onClick={saveHomeScreenSettings} className="mt-6">
               <Save className="w-4 h-4 mr-2" />
               Save Settings
             </Button>

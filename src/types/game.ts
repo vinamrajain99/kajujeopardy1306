@@ -28,6 +28,15 @@ export interface HomeScreenText {
   style: 'title' | 'subtitle' | 'tagline';
 }
 
+export type HomeScreenImage = 'baby' | 'stork' | 'rattle' | 'bottle' | 'footprints' | 'heart' | 'star' | 'balloon' | 'cake' | 'gift';
+
+export interface HomeScreenSettings {
+  heading?: string;
+  subheading?: string;
+  tagline?: string;
+  image: HomeScreenImage;
+}
+
 export interface GameVersion {
   id: string;
   name: string;
@@ -40,7 +49,8 @@ export interface GameVersion {
 export type ColorTheme = 'babyShower' | 'ocean' | 'sunset' | 'forest' | 'royal';
 
 export interface GlobalSettings {
-  homeScreenTexts: HomeScreenText[];
+  homeScreenTexts: HomeScreenText[]; // deprecated, kept for migration
+  homeScreen: HomeScreenSettings;
   colorTheme: ColorTheme;
   timerEnabled: boolean;
   timerDuration: number; // in seconds

@@ -1,4 +1,4 @@
-import { GameVersion, GlobalSettings, HomeScreenText } from "@/types/game";
+import { GameVersion, GlobalSettings, HomeScreenSettings } from "@/types/game";
 
 const STORAGE_KEY = "jeopardy_games";
 const SETTINGS_KEY = "jeopardy_settings";
@@ -114,10 +114,15 @@ export const resizeGame = (game: GameVersion, newCategoryCount: number, newQuest
 // Global Settings
 export const getGlobalSettings = (): GlobalSettings => {
   const stored = localStorage.getItem(SETTINGS_KEY);
+  const defaultHomeScreen: HomeScreenSettings = {
+    heading: "Gender Reveal Jeopardy!",
+    subheading: undefined,
+    tagline: undefined,
+    image: 'baby',
+  };
   const defaultSettings: GlobalSettings = {
-    homeScreenTexts: [
-      { id: crypto.randomUUID(), text: "Gender Reveal Jeopardy!", style: "title" as const },
-    ],
+    homeScreenTexts: [],
+    homeScreen: defaultHomeScreen,
     colorTheme: 'babyShower',
     timerEnabled: false,
     timerDuration: 30,
@@ -127,6 +132,19 @@ export const getGlobalSettings = (): GlobalSettings => {
   }
   try {
     const parsed = JSON.parse(stored);
+    // Migration: if old format exists, migrate to new format
+    if (parsed.homeScreenTexts && parsed.homeScreenTexts.length > 0 && !parsed.homeScreen) {
+      const texts = parsed.homeScreenTexts;
+      const heading = texts.find((t: any) => t.style === 'title')?.text;
+      const subheading = texts.find((t: any) => t.style === 'subtitle')?.text;
+      const tagline = texts.find((t: any) => t.style === 'tagline')?.text;
+      parsed.homeScreen = {
+        heading,
+        subheading,
+        tagline,
+        image: 'baby',
+      };
+    }
     return { ...defaultSettings, ...parsed };
   } catch {
     return defaultSettings;

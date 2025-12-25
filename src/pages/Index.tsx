@@ -1,5 +1,5 @@
 import { useState } from "react";
-import { GameVersion } from "@/types/game";
+import { GameVersion, HomeScreenImage } from "@/types/game";
 import { getStoredGames, getGlobalSettings } from "@/lib/storage";
 import { GameBoard } from "@/components/game/GameBoard";
 import { AdminDashboard } from "@/components/admin/AdminDashboard";
@@ -7,6 +7,19 @@ import { Button } from "@/components/ui/button";
 import { Play, Settings, Sparkles } from "lucide-react";
 
 type View = "home" | "game" | "admin";
+
+const IMAGE_EMOJIS: Record<HomeScreenImage, string> = {
+  baby: '👶',
+  stork: '🦢',
+  rattle: '🎀',
+  bottle: '🍼',
+  footprints: '👣',
+  heart: '💕',
+  star: '⭐',
+  balloon: '🎈',
+  cake: '🎂',
+  gift: '🎁',
+};
 
 const Index = () => {
   const [view, setView] = useState<View>("home");
@@ -52,12 +65,9 @@ const Index = () => {
     );
   }
 
-  // Get global home screen texts
+  // Get global home screen settings
   const globalSettings = getGlobalSettings();
-  const homeTexts = globalSettings.homeScreenTexts;
-
-  // Filter out subtitles from display (only show title and tagline)
-  const displayTexts = homeTexts.filter(t => t.style !== 'subtitle');
+  const homeScreen = globalSettings.homeScreen;
 
   return (
     <div className="min-h-screen bg-background confetti-bg flex flex-col items-center justify-center p-4 relative overflow-hidden">
@@ -81,26 +91,30 @@ const Index = () => {
         {/* Logo/Icon */}
         <div className="mb-6 animate-scale-in">
           <div className="w-16 h-16 mx-auto rounded-full baby-gradient flex items-center justify-center shadow-lg">
-            <span className="text-2xl">👶</span>
+            <span className="text-2xl">{IMAGE_EMOJIS[homeScreen.image]}</span>
           </div>
         </div>
 
-        {/* Dynamic Home Screen Texts - Only title and tagline */}
-        {displayTexts.map((item) => {
-          if (item.style === 'title') {
-            return (
-              <h1 key={item.id} className="font-display text-3xl md:text-4xl lg:text-5xl text-primary mb-4 animate-fade-in leading-tight">
-                {item.text}
-              </h1>
-            );
-          } else {
-            return (
-              <p key={item.id} className="text-sm text-foreground/70 mb-3 animate-fade-in italic font-bold">
-                {item.text}
-              </p>
-            );
-          }
-        })}
+        {/* Heading */}
+        {homeScreen.heading && (
+          <h1 className="font-display text-3xl md:text-4xl lg:text-5xl text-primary mb-4 animate-fade-in leading-tight">
+            {homeScreen.heading}
+          </h1>
+        )}
+
+        {/* Subheading */}
+        {homeScreen.subheading && (
+          <p className="text-lg md:text-xl text-foreground/80 mb-3 animate-fade-in">
+            {homeScreen.subheading}
+          </p>
+        )}
+
+        {/* Tagline */}
+        {homeScreen.tagline && (
+          <p className="text-sm text-foreground/70 mb-3 animate-fade-in italic font-bold">
+            {homeScreen.tagline}
+          </p>
+        )}
 
         {/* Action Buttons */}
         <div className="flex flex-col items-center gap-3 animate-fade-in mt-6">
