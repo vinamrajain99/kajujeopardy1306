@@ -34,26 +34,80 @@ export const getGameById = (gameId: string): GameVersion | null => {
   return games.find((g) => g.id === gameId) || null;
 };
 
-export const createEmptyGame = (name: string): GameVersion => {
-  const defaultPoints = [100, 200, 300, 400, 500];
+export const createEmptyGame = (name: string, categoryCount = 5, questionsPerCategory = 5): GameVersion => {
+  const getDefaultPoints = (index: number, total: number) => {
+    return (index + 1) * Math.round(500 / total);
+  };
   
   return {
     id: crypto.randomUUID(),
     name,
     createdAt: new Date().toISOString(),
-    categories: Array.from({ length: 5 }, (_, catIndex) => ({
+    categoryCount,
+    questionsPerCategory,
+    categories: Array.from({ length: categoryCount }, (_, catIndex) => ({
       id: crypto.randomUUID(),
       name: `Category ${catIndex + 1}`,
-      questions: Array.from({ length: 5 }, (_, qIndex) => ({
+      questions: Array.from({ length: questionsPerCategory }, (_, qIndex) => ({
         id: crypto.randomUUID(),
         text: "",
         isMCQ: false,
         options: [],
         answer: "",
         images: [],
-        points: defaultPoints[qIndex],
+        points: getDefaultPoints(qIndex, questionsPerCategory),
       })),
     })),
+  };
+};
+
+export const resizeGame = (game: GameVersion, newCategoryCount: number, newQuestionsPerCategory: number): GameVersion => {
+  const getDefaultPoints = (index: number, total: number) => {
+    return (index + 1) * Math.round(500 / total);
+  };
+
+  const resizedCategories = Array.from({ length: newCategoryCount }, (_, catIndex) => {
+    const existingCategory = game.categories[catIndex];
+    if (existingCategory) {
+      // Resize questions in existing category
+      const resizedQuestions = Array.from({ length: newQuestionsPerCategory }, (_, qIndex) => {
+        const existingQuestion = existingCategory.questions[qIndex];
+        if (existingQuestion) {
+          return existingQuestion;
+        }
+        return {
+          id: crypto.randomUUID(),
+          text: "",
+          isMCQ: false,
+          options: [],
+          answer: "",
+          images: [],
+          points: getDefaultPoints(qIndex, newQuestionsPerCategory),
+        };
+      });
+      return { ...existingCategory, questions: resizedQuestions };
+    }
+    // Create new category
+    return {
+      id: crypto.randomUUID(),
+      name: `Category ${catIndex + 1}`,
+      questions: Array.from({ length: newQuestionsPerCategory }, (_, qIndex) => ({
+        id: crypto.randomUUID(),
+        text: "",
+        isMCQ: false,
+        options: [],
+        answer: "",
+        images: [],
+        points: getDefaultPoints(qIndex, newQuestionsPerCategory),
+      })),
+    };
+  });
+
+  return {
+    ...game,
+    categoryCount: newCategoryCount,
+    questionsPerCategory: newQuestionsPerCategory,
+    categories: resizedCategories,
   };
 };
 

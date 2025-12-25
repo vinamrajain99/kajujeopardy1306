@@ -164,44 +164,70 @@ export const GameBoard = ({ game, onExit }: GameBoardProps) => {
     );
   }
 
+  // Calculate dynamic sizing based on grid dimensions
+  const categoryCount = game.categoryCount || game.categories.length;
+  const questionsPerCategory = game.questionsPerCategory || game.categories[0]?.questions.length || 5;
+  
+  // Calculate grid column class dynamically
+  const getGridCols = () => {
+    if (categoryCount <= 3) return 'grid-cols-3';
+    if (categoryCount <= 4) return 'grid-cols-4';
+    if (categoryCount <= 5) return 'grid-cols-5';
+    if (categoryCount <= 6) return 'grid-cols-6';
+    if (categoryCount <= 7) return 'grid-cols-7';
+    return 'grid-cols-8';
+  };
+
+  // Calculate font size based on grid size
+  const getTitleSize = () => {
+    if (categoryCount >= 7) return 'text-sm md:text-base';
+    if (categoryCount >= 6) return 'text-base md:text-lg';
+    return 'text-xl md:text-2xl';
+  };
+
   return (
-    <div className="min-h-screen bg-background confetti-bg p-3 md:p-4 lg:p-6">
+    <div className="h-screen bg-background confetti-bg p-2 md:p-3 flex flex-col overflow-hidden">
       {/* Header */}
-      <div className="flex flex-col md:flex-row items-center justify-between gap-3 mb-4">
-        <div className="flex items-center gap-3">
-          <Button variant="ghost" size="icon" onClick={onExit}>
+      <div className="flex flex-col md:flex-row items-center justify-between gap-2 mb-2 shrink-0">
+        <div className="flex items-center gap-2">
+          <Button variant="ghost" size="icon" className="h-8 w-8" onClick={onExit}>
             <ArrowLeft className="w-4 h-4" />
           </Button>
-          <h1 className="font-display text-xl md:text-2xl text-primary">
+          <h1 className={`font-display ${getTitleSize()} text-primary`}>
             {game.name}
           </h1>
         </div>
 
         {/* Scoreboard */}
-        <div className="flex items-center gap-3">
-          <div className="glass rounded-lg px-3 py-1.5 text-center">
-            <p className="text-[10px] text-muted-foreground font-medium">{player1Name}</p>
-            <p className="font-display text-base text-pink">{scores.player1}</p>
+        <div className="flex items-center gap-2">
+          <div className="glass rounded-lg px-2 py-1 text-center">
+            <p className="text-[9px] text-muted-foreground font-medium">{player1Name}</p>
+            <p className="font-display text-sm text-pink">{scores.player1}</p>
           </div>
-          <div className="glass rounded-lg px-3 py-1.5 text-center">
-            <p className="text-[10px] text-muted-foreground font-medium">{player2Name}</p>
-            <p className="font-display text-base text-blue">{scores.player2}</p>
+          <div className="glass rounded-lg px-2 py-1 text-center">
+            <p className="text-[9px] text-muted-foreground font-medium">{player2Name}</p>
+            <p className="font-display text-sm text-blue">{scores.player2}</p>
           </div>
-          <Button variant="ghost" size="icon" onClick={handleReset}>
-            <RotateCcw className="w-4 h-4" />
+          <Button variant="ghost" size="icon" className="h-8 w-8" onClick={handleReset}>
+            <RotateCcw className="w-3 h-3" />
           </Button>
         </div>
       </div>
 
-      {/* Game Grid */}
-      <div className="grid grid-cols-5 gap-2 md:gap-3">
+      {/* Game Grid - fills remaining space */}
+      <div 
+        className={`grid ${getGridCols()} gap-1.5 md:gap-2 flex-1`}
+        style={{
+          gridTemplateRows: `auto repeat(${questionsPerCategory}, 1fr)`,
+        }}
+      >
         {/* Category Headers */}
         {game.categories.map((category) => (
           <CategoryHeader key={category.id} name={category.name} />
         ))}
 
         {/* Question Cards - rendered row by row */}
-        {Array.from({ length: 5 }).map((_, rowIndex) => (
+        {Array.from({ length: questionsPerCategory }).map((_, rowIndex) => (
           <>
             {game.categories.map((category, colIndex) => {
               const question = category.questions[rowIndex];
@@ -216,6 +242,7 @@ export const GameBoard = ({ game, onExit }: GameBoardProps) => {
                   isComplete={isCardComplete(cardId)}
                   onSelect={() => handleCardSelect(colIndex, rowIndex)}
                   onReview={() => handleReview(colIndex, rowIndex)}
+                  compact={categoryCount >= 6 || questionsPerCategory >= 6}
                 />
               );
             })}
