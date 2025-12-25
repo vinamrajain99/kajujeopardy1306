@@ -3,7 +3,7 @@ import { GameVersion, HomeScreenSettings, HomeScreenImage, ColorTheme } from "@/
 import { getStoredGames, deleteGame, createEmptyGame, saveGame, getGlobalSettings, saveGlobalSettings } from "@/lib/storage";
 import { GameEditor } from "./GameEditor";
 import { Button } from "@/components/ui/button";
-import { Plus, Trash2, Edit, Play, ArrowLeft, Type, Save, Palette, Timer } from "lucide-react";
+import { Plus, Trash2, Edit, Play, ArrowLeft, Settings, Save, Palette, Timer } from "lucide-react";
 import { toast } from "sonner";
 
 const COLOR_THEMES: { id: ColorTheme; name: string; colors: string[] }[] = [
@@ -74,7 +74,7 @@ export const AdminDashboard = ({ onPlayGame, onBack }: AdminDashboardProps) => {
     setGames(getStoredGames());
   };
 
-  const saveHomeScreenSettings = () => {
+  const saveSettings = () => {
     saveGlobalSettings({ 
       homeScreenTexts: [], 
       homeScreen, 
@@ -82,26 +82,9 @@ export const AdminDashboard = ({ onPlayGame, onBack }: AdminDashboardProps) => {
       timerEnabled, 
       timerDuration 
     });
-    toast.success("Home screen settings saved!");
+    applyColorTheme(colorTheme);
+    toast.success("Settings saved!");
     setShowHomeScreenEditor(false);
-  };
-
-  const handleTimerChange = (enabled: boolean, duration?: number) => {
-    setTimerEnabled(enabled);
-    if (duration !== undefined) setTimerDuration(duration);
-    saveGlobalSettings({ 
-      ...getGlobalSettings(), 
-      timerEnabled: enabled, 
-      timerDuration: duration ?? timerDuration 
-    });
-    toast.success(enabled ? `Timer set to ${duration ?? timerDuration}s` : "Timer disabled");
-  };
-
-  const handleColorThemeChange = (theme: ColorTheme) => {
-    setColorTheme(theme);
-    saveGlobalSettings({ ...getGlobalSettings(), colorTheme: theme });
-    applyColorTheme(theme);
-    toast.success(`Theme changed to ${COLOR_THEMES.find(t => t.id === theme)?.name}!`);
   };
 
   const applyColorTheme = (theme: ColorTheme) => {
@@ -178,10 +161,77 @@ export const AdminDashboard = ({ onPlayGame, onBack }: AdminDashboardProps) => {
             <Button variant="outline" size="icon" onClick={() => setShowHomeScreenEditor(false)}>
               <ArrowLeft className="w-5 h-5" />
             </Button>
-            <h1 className="font-display text-3xl text-primary">Home Screen Settings</h1>
+            <h1 className="font-display text-3xl text-primary">Settings</h1>
           </div>
 
+          {/* Color Theme Selector */}
+          <div className="glass rounded-xl p-6 mb-6">
+            <div className="flex items-center gap-2 mb-4">
+              <Palette className="w-5 h-5 text-primary" />
+              <h3 className="font-display text-lg text-foreground">Color Theme</h3>
+            </div>
+            <div className="grid grid-cols-2 md:grid-cols-5 gap-3">
+              {COLOR_THEMES.map((theme) => (
+                <button
+                  key={theme.id}
+                  onClick={() => setColorTheme(theme.id)}
+                  className={`p-3 rounded-lg border-2 transition-all ${
+                    colorTheme === theme.id
+                      ? 'border-primary glow-primary'
+                      : 'border-border hover:border-primary/50'
+                  }`}
+                >
+                  <div className="flex gap-1 mb-2 justify-center">
+                    {theme.colors.map((color, i) => (
+                      <div
+                        key={i}
+                        className="w-4 h-4 rounded-full"
+                        style={{ backgroundColor: color }}
+                      />
+                    ))}
+                  </div>
+                  <p className="text-xs font-medium text-center">{theme.name}</p>
+                </button>
+              ))}
+            </div>
+          </div>
+
+          {/* Timer Settings */}
+          <div className="glass rounded-xl p-6 mb-6">
+            <div className="flex items-center gap-2 mb-4">
+              <Timer className="w-5 h-5 text-primary" />
+              <h3 className="font-display text-lg text-foreground">Question Timer</h3>
+            </div>
+            <div className="flex flex-wrap items-center gap-4">
+              <label className="flex items-center gap-2 cursor-pointer">
+                <input
+                  type="checkbox"
+                  checked={timerEnabled}
+                  onChange={(e) => setTimerEnabled(e.target.checked)}
+                  className="w-5 h-5 rounded border-border bg-input text-primary focus:ring-primary"
+                />
+                <span className="text-sm text-foreground">Enable countdown timer</span>
+              </label>
+              {timerEnabled && (
+                <div className="flex items-center gap-2">
+                  <label className="text-sm text-muted-foreground">Duration:</label>
+                  <select
+                    value={timerDuration}
+                    onChange={(e) => setTimerDuration(parseInt(e.target.value))}
+                    className="bg-input border border-border rounded-lg px-3 py-2 text-foreground focus:ring-2 focus:ring-primary focus:border-transparent"
+                  >
+                    {[15, 20, 30, 45, 60, 90, 120].map((sec) => (
+                      <option key={sec} value={sec}>{sec} seconds</option>
+                    ))}
+                  </select>
+                </div>
+              )}
+            </div>
+          </div>
+
+          {/* Home Screen Settings */}
           <div className="glass rounded-xl p-6">
+            <h3 className="font-display text-lg text-foreground mb-4">Home Screen</h3>
             <p className="text-muted-foreground mb-6 text-sm">
               Customize the text and image displayed on the game's home screen.
             </p>
@@ -253,9 +303,9 @@ export const AdminDashboard = ({ onPlayGame, onBack }: AdminDashboardProps) => {
               </div>
             </div>
 
-            <Button variant="gold" onClick={saveHomeScreenSettings} className="mt-6">
+            <Button variant="gold" onClick={saveSettings} className="mt-6">
               <Save className="w-4 h-4 mr-2" />
-              Save Settings
+              Save All Settings
             </Button>
           </div>
         </div>
@@ -276,78 +326,13 @@ export const AdminDashboard = ({ onPlayGame, onBack }: AdminDashboardProps) => {
           </div>
           <div className="flex items-center gap-2 flex-wrap">
             <Button variant="outline" onClick={() => setShowHomeScreenEditor(true)}>
-              <Type className="w-4 h-4 mr-2" />
-              Home Screen
+              <Settings className="w-4 h-4 mr-2" />
+              Settings
             </Button>
             <Button variant="gold" onClick={handleCreateGame}>
               <Plus className="w-5 h-5 mr-2" />
               New Game
             </Button>
-          </div>
-        </div>
-
-        {/* Color Theme Selector */}
-        <div className="glass rounded-xl p-4 mb-6">
-          <div className="flex items-center gap-2 mb-3">
-            <Palette className="w-5 h-5 text-primary" />
-            <h3 className="font-display text-lg text-foreground">Color Theme</h3>
-          </div>
-          <div className="grid grid-cols-2 md:grid-cols-5 gap-3">
-            {COLOR_THEMES.map((theme) => (
-              <button
-                key={theme.id}
-                onClick={() => handleColorThemeChange(theme.id)}
-                className={`p-3 rounded-lg border-2 transition-all ${
-                  colorTheme === theme.id
-                    ? 'border-primary glow-primary'
-                    : 'border-border hover:border-primary/50'
-                }`}
-              >
-                <div className="flex gap-1 mb-2 justify-center">
-                  {theme.colors.map((color, i) => (
-                    <div
-                      key={i}
-                      className="w-4 h-4 rounded-full"
-                      style={{ backgroundColor: color }}
-                    />
-                  ))}
-                </div>
-                <p className="text-xs font-medium text-center">{theme.name}</p>
-              </button>
-            ))}
-          </div>
-        </div>
-
-        {/* Timer Settings */}
-        <div className="glass rounded-xl p-4 mb-6">
-          <div className="flex items-center gap-2 mb-3">
-            <Timer className="w-5 h-5 text-primary" />
-            <h3 className="font-display text-lg text-foreground">Question Timer</h3>
-          </div>
-          <div className="flex flex-wrap items-center gap-4">
-            <label className="flex items-center gap-2 cursor-pointer">
-              <input
-                type="checkbox"
-                checked={timerEnabled}
-                onChange={(e) => handleTimerChange(e.target.checked)}
-                className="w-5 h-5 rounded border-border bg-input text-primary focus:ring-primary"
-              />
-              <span className="text-sm text-foreground">Enable countdown timer</span>
-            </label>
-            {timerEnabled && (
-              <div className="flex items-center gap-2">
-                <label className="text-sm text-muted-foreground">Duration:</label>
-                <select
-                  value={timerDuration}
-                  onChange={(e) => handleTimerChange(true, parseInt(e.target.value))}
-                  className="bg-input border border-border rounded-lg px-3 py-2 text-foreground focus:ring-2 focus:ring-primary focus:border-transparent"
-                >
-                  {[15, 20, 30, 45, 60, 90, 120].map((sec) => (
-                    <option key={sec} value={sec}>{sec} seconds</option>
-                  ))}
-                </select>
-              </div>
-            )}
           </div>
         </div>
 
