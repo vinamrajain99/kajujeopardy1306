@@ -77,7 +77,7 @@ export default {
   		},
   		fontFamily: {
   			sans: [
-  				'Quicksand',
+  				'Inter',
   				'ui-sans-serif',
   				'system-ui',
   				'-apple-system',
@@ -86,12 +86,33 @@ export default {
   				'Roboto',
   				'Helvetica Neue',
   				'Arial',
+  				'Noto Sans',
   				'sans-serif'
   			],
   			display: [
   				'Poppins',
   				'sans-serif'
   			],
+  			serif: [
+  				'Lora',
+  				'ui-serif',
+  				'Georgia',
+  				'Cambria',
+  				'Times New Roman',
+  				'Times',
+  				'serif'
+  			],
+  			mono: [
+  				'Space Mono',
+  				'ui-monospace',
+  				'SFMono-Regular',
+  				'Menlo',
+  				'Monaco',
+  				'Consolas',
+  				'Liberation Mono',
+  				'Courier New',
+  				'monospace'
+  			]
   		},
   		keyframes: {
   			'accordion-down': {
