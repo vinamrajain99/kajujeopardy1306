@@ -1,5 +1,5 @@
 import { Question } from "@/types/game";
-import { Check, Eye } from "lucide-react";
+import { Check, X, Eye } from "lucide-react";
 
 interface GameCardProps {
   question: Question;
@@ -26,19 +26,19 @@ export const GameCard = ({
         onClick={onReview}
         className={`w-full h-full rounded-md flex flex-col items-center justify-center gap-0.5 transition-all group cursor-pointer ${
           isComplete 
-            ? "bg-muted/40 border border-border/20 hover:bg-muted/60" 
-            : "bg-yellow/20 border-2 border-dashed border-yellow/50 hover:bg-yellow/30"
+            ? "bg-success/20 border border-success/30 hover:bg-success/30" 
+            : "bg-destructive/20 border border-destructive/30 hover:bg-destructive/30"
         }`}
       >
         {isComplete ? (
           <>
-            <Check className={compact ? "w-3 h-3" : "w-4 h-4"} />
+            <Check className={`${compact ? "w-3 h-3" : "w-4 h-4"} text-success`} />
             <Eye className={`${compact ? "w-2 h-2" : "w-2.5 h-2.5"} text-muted-foreground opacity-0 group-hover:opacity-100 transition-opacity`} />
           </>
         ) : (
           <>
-            <Eye className={`${compact ? "w-3 h-3" : "w-4 h-4"} text-yellow`} />
-            <span className={`${compact ? "text-[7px]" : "text-[9px]"} text-yellow font-medium`}>Review</span>
+            <X className={`${compact ? "w-3 h-3" : "w-4 h-4"} text-destructive`} />
+            <Eye className={`${compact ? "w-2 h-2" : "w-2.5 h-2.5"} text-muted-foreground opacity-0 group-hover:opacity-100 transition-opacity`} />
           </>
         )}
       </button>

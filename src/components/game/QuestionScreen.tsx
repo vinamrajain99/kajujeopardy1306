@@ -1,7 +1,9 @@
-import { useState, useEffect } from "react";
+import { useState, useEffect, useRef } from "react";
 import { Question, MCQOption } from "@/types/game";
+import { getGlobalSettings } from "@/lib/storage";
 import { Button } from "@/components/ui/button";
-import { ArrowLeft, Eye, EyeOff, Check, X } from "lucide-react";
+import { ArrowLeft, Eye, EyeOff, Check, X, Pause, Play } from "lucide-react";
+import confetti from "canvas-confetti";
 
 interface QuestionScreenProps {
   question: Question;
@@ -31,6 +33,12 @@ export const QuestionScreen = ({
   const [selectedOption, setSelectedOption] = useState<number | null>(null);
   const [currentImageIndex, setCurrentImageIndex] = useState(0);
   const [selectedPlayer, setSelectedPlayer] = useState<1 | 2 | null>(currentAnswer || null);
+  
+  // Timer state
+  const settings = getGlobalSettings();
+  const [timeLeft, setTimeLeft] = useState(settings.timerDuration);
+  const [timerPaused, setTimerPaused] = useState(false);
+  const timerRef = useRef<NodeJS.Timeout | null>(null);
 
   useEffect(() => {
     if (question.images.length > 1) {
@@ -41,6 +49,25 @@ export const QuestionScreen = ({
     }
   }, [question.images.length]);
 
+  // Timer effect
+  useEffect(() => {
+    if (!settings.timerEnabled || timerPaused || timeLeft <= 0) return;
+    
+    timerRef.current = setInterval(() => {
+      setTimeLeft((prev) => {
+        if (prev <= 1) {
+          if (timerRef.current) clearInterval(timerRef.current);
+          return 0;
+        }
+        return prev - 1;
+      });
+    }, 1000);
+
+    return () => {
+      if (timerRef.current) clearInterval(timerRef.current);
+    };
+  }, [settings.timerEnabled, timerPaused, timeLeft]);
+
   const handleOptionSelect = (index: number) => {
     if (!showAnswer) {
       setSelectedOption(index);
@@ -49,18 +76,44 @@ export const QuestionScreen = ({
 
   const handlePlayerSelect = (player: 1 | 2) => {
     if (selectedPlayer === player) {
-      // Deselect if clicking the same player
       setSelectedPlayer(null);
-      onCorrect(player); // This will toggle off
+      onCorrect(player);
     } else {
       setSelectedPlayer(player);
       onCorrect(player);
     }
   };
 
+  const handleRevealAnswer = () => {
+    const newShowAnswer = !showAnswer;
+    setShowAnswer(newShowAnswer);
+    
+    // Trigger confetti when revealing answer
+    if (newShowAnswer) {
+      confetti({
+        particleCount: 100,
+        spread: 70,
+        origin: { y: 0.6 },
+        colors: ['#FFB6C1', '#87CEEB', '#FFFACD', '#98FB98', '#E6E6FA'],
+      });
+    }
+  };
+
+  const formatTime = (seconds: number) => {
+    const mins = Math.floor(seconds / 60);
+    const secs = seconds % 60;
+    return `${mins}:${secs.toString().padStart(2, '0')}`;
+  };
+
+  const getTimerColor = () => {
+    if (timeLeft <= 5) return 'text-destructive';
+    if (timeLeft <= 15) return 'text-yellow';
+    return 'text-foreground';
+  };
+
   return (
     <div className="min-h-screen bg-background confetti-bg p-4 md:p-6 flex flex-col">
-      {/* Header with Scoreboard */}
+      {/* Header with Scoreboard and Timer */}
       <div className="flex items-center justify-between gap-3 mb-4 animate-fade-in">
         <div>
           <span className="text-muted-foreground text-xs uppercase tracking-wider font-medium">
@@ -70,6 +123,24 @@ export const QuestionScreen = ({
             {question.points} points
           </h2>
         </div>
+        
+        {/* Timer */}
+        {settings.timerEnabled && (
+          <div className="flex items-center gap-2">
+            <div className={`glass rounded-lg px-3 py-1.5 text-center ${timeLeft <= 5 ? 'animate-pulse border-destructive border-2' : ''}`}>
+              <p className="text-[10px] text-muted-foreground font-medium">Time</p>
+              <p className={`font-display text-lg ${getTimerColor()}`}>{formatTime(timeLeft)}</p>
+            </div>
+            <Button
+              variant="ghost"
+              size="icon"
+              className="h-8 w-8"
+              onClick={() => setTimerPaused(!timerPaused)}
+            >
+              {timerPaused ? <Play className="w-4 h-4" /> : <Pause className="w-4 h-4" />}
+            </Button>
+          </div>
+        )}
         
         {/* Scoreboard */}
         <div className="flex items-center gap-3">
@@ -204,7 +275,7 @@ export const QuestionScreen = ({
         <Button
           variant={showAnswer ? "outline" : "gold"}
           size="default"
-          onClick={() => setShowAnswer(!showAnswer)}
+          onClick={handleRevealAnswer}
         >
           {showAnswer ? (
             <>

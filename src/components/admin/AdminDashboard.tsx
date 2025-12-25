@@ -3,7 +3,7 @@ import { GameVersion, HomeScreenText, ColorTheme } from "@/types/game";
 import { getStoredGames, deleteGame, createEmptyGame, saveGame, getGlobalSettings, saveGlobalSettings } from "@/lib/storage";
 import { GameEditor } from "./GameEditor";
 import { Button } from "@/components/ui/button";
-import { Plus, Trash2, Edit, Play, ArrowLeft, Type, Save, Palette } from "lucide-react";
+import { Plus, Trash2, Edit, Play, ArrowLeft, Type, Save, Palette, Timer } from "lucide-react";
 import { toast } from "sonner";
 
 const COLOR_THEMES: { id: ColorTheme; name: string; colors: string[] }[] = [
@@ -25,12 +25,16 @@ export const AdminDashboard = ({ onPlayGame, onBack }: AdminDashboardProps) => {
   const [showHomeScreenEditor, setShowHomeScreenEditor] = useState(false);
   const [homeScreenTexts, setHomeScreenTexts] = useState<HomeScreenText[]>([]);
   const [colorTheme, setColorTheme] = useState<ColorTheme>('babyShower');
+  const [timerEnabled, setTimerEnabled] = useState(false);
+  const [timerDuration, setTimerDuration] = useState(30);
 
   useEffect(() => {
     setGames(getStoredGames());
     const settings = getGlobalSettings();
     setHomeScreenTexts(settings.homeScreenTexts);
     setColorTheme(settings.colorTheme);
+    setTimerEnabled(settings.timerEnabled);
+    setTimerDuration(settings.timerDuration);
   }, []);
 
   const handleCreateGame = () => {
@@ -80,9 +84,20 @@ export const AdminDashboard = ({ onPlayGame, onBack }: AdminDashboardProps) => {
   };
 
   const saveHomeScreenSettings = () => {
-    saveGlobalSettings({ homeScreenTexts, colorTheme });
+    saveGlobalSettings({ homeScreenTexts, colorTheme, timerEnabled, timerDuration });
     toast.success("Home screen settings saved!");
     setShowHomeScreenEditor(false);
+  };
+
+  const handleTimerChange = (enabled: boolean, duration?: number) => {
+    setTimerEnabled(enabled);
+    if (duration !== undefined) setTimerDuration(duration);
+    saveGlobalSettings({ 
+      ...getGlobalSettings(), 
+      timerEnabled: enabled, 
+      timerDuration: duration ?? timerDuration 
+    });
+    toast.success(enabled ? `Timer set to ${duration ?? timerDuration}s` : "Timer disabled");
   };
 
   const handleColorThemeChange = (theme: ColorTheme) => {
@@ -283,6 +298,39 @@ export const AdminDashboard = ({ onPlayGame, onBack }: AdminDashboardProps) => {
                 <p className="text-xs font-medium text-center">{theme.name}</p>
               </button>
             ))}
+          </div>
+        </div>
+
+        {/* Timer Settings */}
+        <div className="glass rounded-xl p-4 mb-6">
+          <div className="flex items-center gap-2 mb-3">
+            <Timer className="w-5 h-5 text-primary" />
+            <h3 className="font-display text-lg text-foreground">Question Timer</h3>
+          </div>
+          <div className="flex flex-wrap items-center gap-4">
+            <label className="flex items-center gap-2 cursor-pointer">
+              <input
+                type="checkbox"
+                checked={timerEnabled}
+                onChange={(e) => handleTimerChange(e.target.checked)}
+                className="w-5 h-5 rounded border-border bg-input text-primary focus:ring-primary"
+              />
+              <span className="text-sm text-foreground">Enable countdown timer</span>
+            </label>
+            {timerEnabled && (
+              <div className="flex items-center gap-2">
+                <label className="text-sm text-muted-foreground">Duration:</label>
+                <select
+                  value={timerDuration}
+                  onChange={(e) => handleTimerChange(true, parseInt(e.target.value))}
+                  className="bg-input border border-border rounded-lg px-3 py-2 text-foreground focus:ring-2 focus:ring-primary focus:border-transparent"
+                >
+                  {[15, 20, 30, 45, 60, 90, 120].map((sec) => (
+                    <option key={sec} value={sec}>{sec} seconds</option>
+                  ))}
+                </select>
+              </div>
+            )}
           </div>
         </div>
 
