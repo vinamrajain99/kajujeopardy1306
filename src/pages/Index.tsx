@@ -4,6 +4,7 @@ import { getStoredGames, getGlobalSettings } from "@/lib/storage";
 import { GameBoard } from "@/components/game/GameBoard";
 import { AdminDashboard } from "@/components/admin/AdminDashboard";
 import { Button } from "@/components/ui/button";
+import { Dialog, DialogContent, DialogHeader, DialogTitle } from "@/components/ui/dialog";
 import { Play, Settings, Sparkles } from "lucide-react";
 
 type View = "home" | "game" | "admin";
@@ -24,8 +25,11 @@ const IMAGE_EMOJIS: Record<HomeScreenImage, string> = {
 const Index = () => {
   const [view, setView] = useState<View>("home");
   const [selectedGame, setSelectedGame] = useState<GameVersion | null>(null);
+  const [showGameSelector, setShowGameSelector] = useState(false);
+  const [availableGames, setAvailableGames] = useState<GameVersion[]>([]);
 
   const handlePlayGame = (game: GameVersion) => {
+    setShowGameSelector(false);
     setSelectedGame(game);
     setView("game");
   };
@@ -40,8 +44,9 @@ const Index = () => {
       handlePlayGame(games[0]);
       return;
     }
-    // Show game selection
-    setView("admin");
+    // Show game selection dialog
+    setAvailableGames(games);
+    setShowGameSelector(true);
   };
 
   if (view === "game" && selectedGame) {
@@ -139,6 +144,31 @@ const Index = () => {
         </div>
 
       </div>
+
+      {/* Game Selection Dialog */}
+      <Dialog open={showGameSelector} onOpenChange={setShowGameSelector}>
+        <DialogContent className="sm:max-w-md">
+          <DialogHeader>
+            <DialogTitle className="font-display text-2xl text-primary">Select a Game</DialogTitle>
+          </DialogHeader>
+          <div className="space-y-3 mt-4">
+            {availableGames.map((game) => (
+              <button
+                key={game.id}
+                onClick={() => handlePlayGame(game)}
+                className="w-full p-4 rounded-xl bg-muted/50 hover:bg-primary/10 border border-border hover:border-primary/50 transition-all text-left group"
+              >
+                <h3 className="font-display text-lg text-foreground group-hover:text-primary transition-colors">
+                  {game.name}
+                </h3>
+                <p className="text-xs text-muted-foreground mt-1">
+                  {game.categoryCount} categories • {game.questionsPerCategory} questions each
+                </p>
+              </button>
+            ))}
+          </div>
+        </DialogContent>
+      </Dialog>
     </div>
   );
 };
