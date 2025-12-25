@@ -1,7 +1,7 @@
 import { useState, useEffect } from "react";
 import { Question, MCQOption } from "@/types/game";
 import { Button } from "@/components/ui/button";
-import { ArrowLeft, Eye, Check, X } from "lucide-react";
+import { ArrowLeft, Eye, EyeOff, Check, X } from "lucide-react";
 
 interface QuestionScreenProps {
   question: Question;
@@ -202,13 +202,21 @@ export const QuestionScreen = ({
         </Button>
 
         <Button
-          variant="gold"
+          variant={showAnswer ? "outline" : "gold"}
           size="default"
-          onClick={() => setShowAnswer(true)}
-          disabled={showAnswer}
+          onClick={() => setShowAnswer(!showAnswer)}
         >
-          <Eye className="w-4 h-4 mr-2" />
-          Reveal Answer
+          {showAnswer ? (
+            <>
+              <EyeOff className="w-4 h-4 mr-2" />
+              Hide Answer
+            </>
+          ) : (
+            <>
+              <Eye className="w-4 h-4 mr-2" />
+              Reveal Answer
+            </>
+          )}
         </Button>
 
         <Button variant="outline" size="default" onClick={onBack}>
