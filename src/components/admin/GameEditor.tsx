@@ -176,7 +176,7 @@ export const GameEditor = ({ game: initialGame, onBack, onSave }: GameEditorProp
                       setSelectedCategory(catIndex);
                       setSelectedQuestion(0);
                     }}
-                    className={`w-full text-left px-4 py-2 rounded-lg transition-colors ${
+                    className={`w-full text-left px-4 py-2 rounded-lg transition-colors font-semibold ${
                       selectedCategory === catIndex
                         ? "bg-primary/20 text-primary"
                         : "hover:bg-muted text-foreground"
