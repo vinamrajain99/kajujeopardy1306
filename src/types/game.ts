@@ -33,6 +33,8 @@ export interface GameVersion {
   name: string;
   createdAt: string;
   categories: Category[];
+  categoryCount: number;
+  questionsPerCategory: number;
 }
 
 export type ColorTheme = 'babyShower' | 'ocean' | 'sunset' | 'forest' | 'royal';

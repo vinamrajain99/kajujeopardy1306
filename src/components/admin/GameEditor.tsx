@@ -1,8 +1,8 @@
 import { useState } from "react";
 import { GameVersion, Category, Question, MCQOption } from "@/types/game";
-import { saveGame } from "@/lib/storage";
+import { saveGame, resizeGame } from "@/lib/storage";
 import { Button } from "@/components/ui/button";
-import { ArrowLeft, Save, Plus, Trash2, Image as ImageIcon } from "lucide-react";
+import { ArrowLeft, Save, Plus, Trash2, Image as ImageIcon, Grid3X3 } from "lucide-react";
 import { toast } from "sonner";
 
 interface GameEditorProps {
@@ -114,6 +114,55 @@ export const GameEditor = ({ game: initialGame, onBack, onSave }: GameEditorProp
       </div>
 
       <div className="container mx-auto px-4 py-6">
+        {/* Game Size Settings */}
+        <div className="glass rounded-xl p-4 mb-6">
+          <div className="flex items-center gap-2 mb-3">
+            <Grid3X3 className="w-5 h-5 text-primary" />
+            <h3 className="font-display text-lg text-foreground">Game Size</h3>
+          </div>
+          <div className="flex flex-wrap items-center gap-4">
+            <div className="flex items-center gap-2">
+              <label className="text-sm text-muted-foreground">Categories:</label>
+              <select
+                value={game.categoryCount || 5}
+                onChange={(e) => {
+                  const newCount = parseInt(e.target.value);
+                  const resized = resizeGame(game, newCount, game.questionsPerCategory || 5);
+                  setGame(resized);
+                  if (selectedCategory >= newCount) setSelectedCategory(0);
+                  toast.success(`Updated to ${newCount} categories`);
+                }}
+                className="bg-input border border-border rounded-lg px-3 py-2 text-foreground focus:ring-2 focus:ring-primary focus:border-transparent"
+              >
+                {[3, 4, 5, 6, 7, 8].map((n) => (
+                  <option key={n} value={n}>{n}</option>
+                ))}
+              </select>
+            </div>
+            <div className="flex items-center gap-2">
+              <label className="text-sm text-muted-foreground">Questions per category:</label>
+              <select
+                value={game.questionsPerCategory || 5}
+                onChange={(e) => {
+                  const newCount = parseInt(e.target.value);
+                  const resized = resizeGame(game, game.categoryCount || 5, newCount);
+                  setGame(resized);
+                  if (selectedQuestion >= newCount) setSelectedQuestion(0);
+                  toast.success(`Updated to ${newCount} questions per category`);
+                }}
+                className="bg-input border border-border rounded-lg px-3 py-2 text-foreground focus:ring-2 focus:ring-primary focus:border-transparent"
+              >
+                {[3, 4, 5, 6, 7, 8].map((n) => (
+                  <option key={n} value={n}>{n}</option>
+                ))}
+              </select>
+            </div>
+            <p className="text-xs text-muted-foreground">
+              Grid: {game.categoryCount || 5} × {game.questionsPerCategory || 5} = {(game.categoryCount || 5) * (game.questionsPerCategory || 5)} cards
+            </p>
+          </div>
+        </div>
+
         {/* Questions Editor */}
         <div className="grid lg:grid-cols-[300px_1fr] gap-6">
           {/* Sidebar - Categories & Questions */}
