@@ -94,17 +94,17 @@ export const QuestionScreen = ({
 
           {/* Context Image - Between question and options */}
           {question.images.length > 0 && (
-            <div className="mb-4 animate-scale-in">
-              <div className="flex items-center justify-center overflow-hidden">
+            <div className="mb-4 animate-scale-in flex-1 flex flex-col min-h-0">
+              <div className="flex items-center justify-center flex-1 min-h-0">
                 <img
                   key={currentImageIndex}
                   src={question.images[currentImageIndex]}
                   alt="Question context"
-                  className="max-w-full max-h-[40vh] object-contain rounded-lg"
+                  className="max-w-full max-h-[55vh] w-auto h-auto object-contain rounded-lg shadow-lg"
                 />
               </div>
               {question.images.length > 1 && (
-                <div className="flex justify-center gap-2 mt-3">
+                <div className="flex justify-center gap-2 mt-3 shrink-0">
                   {question.images.map((_, index) => (
                     <button
                       key={index}
