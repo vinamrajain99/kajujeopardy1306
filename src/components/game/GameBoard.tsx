@@ -51,8 +51,20 @@ export const GameBoard = ({ game, onExit }: GameBoardProps) => {
         currentQuestion.questionIndex
       ].points;
     
-    // If reviewing and changing answer, adjust scores
     const previousAnswer = cardAnswers[cardId];
+    
+    // If clicking the same player, deselect (toggle off)
+    if (previousAnswer === player) {
+      setScores((prev) => ({
+        ...prev,
+        [player === 1 ? "player1" : "player2"]:
+          prev[player === 1 ? "player1" : "player2"] - points,
+      }));
+      setCardAnswers((prev) => ({ ...prev, [cardId]: null }));
+      return;
+    }
+    
+    // If changing from one player to another, subtract from previous
     if (previousAnswer) {
       setScores((prev) => ({
         ...prev,
@@ -61,13 +73,13 @@ export const GameBoard = ({ game, onExit }: GameBoardProps) => {
       }));
     }
     
+    // Add points to new player
     setCardAnswers((prev) => ({ ...prev, [cardId]: player }));
     setScores((prev) => ({
       ...prev,
       [player === 1 ? "player1" : "player2"]:
         prev[player === 1 ? "player1" : "player2"] + points,
     }));
-    // Don't auto-navigate back - user must click "Back to Board"
   };
 
   const handleReset = () => {

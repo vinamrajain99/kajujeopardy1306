@@ -101,6 +101,8 @@ export const AdminDashboard = ({ onPlayGame, onBack }: AdminDashboardProps) => {
         root.style.setProperty('--yellow', '50 95% 75%');
         root.style.setProperty('--mint', '150 60% 75%');
         root.style.setProperty('--lavender', '270 60% 85%');
+        root.style.setProperty('--primary', '330 80% 55%');
+        root.style.setProperty('--foreground', '340 20% 15%');
         break;
       case 'ocean':
         root.style.setProperty('--pink', '200 100% 40%');
@@ -108,6 +110,8 @@ export const AdminDashboard = ({ onPlayGame, onBack }: AdminDashboardProps) => {
         root.style.setProperty('--yellow', '195 80% 72%');
         root.style.setProperty('--mint', '195 60% 85%');
         root.style.setProperty('--lavender', '220 100% 25%');
+        root.style.setProperty('--primary', '200 100% 40%');
+        root.style.setProperty('--foreground', '200 50% 15%');
         break;
       case 'sunset':
         root.style.setProperty('--pink', '0 100% 71%');
@@ -115,6 +119,8 @@ export const AdminDashboard = ({ onPlayGame, onBack }: AdminDashboardProps) => {
         root.style.setProperty('--yellow', '48 100% 62%');
         root.style.setProperty('--mint', '24 100% 63%');
         root.style.setProperty('--lavender', '7 54% 49%');
+        root.style.setProperty('--primary', '0 100% 65%');
+        root.style.setProperty('--foreground', '15 50% 15%');
         break;
       case 'forest':
         root.style.setProperty('--pink', '153 50% 30%');
@@ -122,6 +128,8 @@ export const AdminDashboard = ({ onPlayGame, onBack }: AdminDashboardProps) => {
         root.style.setProperty('--yellow', '153 45% 50%');
         root.style.setProperty('--mint', '150 45% 60%');
         root.style.setProperty('--lavender', '150 40% 70%');
+        root.style.setProperty('--primary', '153 50% 35%');
+        root.style.setProperty('--foreground', '150 30% 15%');
         break;
       case 'royal':
         root.style.setProperty('--pink', '280 70% 46%');
@@ -129,6 +137,8 @@ export const AdminDashboard = ({ onPlayGame, onBack }: AdminDashboardProps) => {
         root.style.setProperty('--yellow', '280 50% 74%');
         root.style.setProperty('--mint', '280 45% 86%');
         root.style.setProperty('--lavender', '280 80% 32%');
+        root.style.setProperty('--primary', '280 70% 50%');
+        root.style.setProperty('--foreground', '280 30% 15%');
         break;
     }
   };

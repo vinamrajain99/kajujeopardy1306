@@ -162,7 +162,7 @@ export const QuestionScreen = ({
                     <img
                       src={option.imageUrl}
                       alt={`Option ${String.fromCharCode(65 + index)}`}
-                      className="mt-2 rounded-lg max-h-20 object-cover"
+                      className="mt-2 rounded-lg max-h-24 w-auto object-contain"
                     />
                   )}
                 </button>
