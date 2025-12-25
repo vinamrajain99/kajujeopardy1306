@@ -4,8 +4,8 @@ interface CategoryHeaderProps {
 
 export const CategoryHeader = ({ name }: CategoryHeaderProps) => {
   return (
-    <div className="glass rounded-lg p-2 md:p-3 text-center">
-      <h3 className="font-display text-xs md:text-sm text-primary uppercase tracking-wide line-clamp-2">
+    <div className="bg-foreground/90 rounded-lg p-1.5 md:p-2 text-center">
+      <h3 className="font-display text-[10px] md:text-xs text-background uppercase tracking-wide line-clamp-2">
         {name || "Category"}
       </h3>
     </div>
