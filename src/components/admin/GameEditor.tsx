@@ -192,7 +192,7 @@ export const GameEditor = ({ game: initialGame, onBack, onSave }: GameEditorProp
                           onClick={() => setSelectedQuestion(qIndex)}
                           className={`w-full text-left px-3 py-1.5 rounded text-sm transition-colors ${
                             selectedQuestion === qIndex
-                              ? "bg-secondary/20 text-secondary"
+                              ? "bg-secondary text-secondary-foreground"
                               : "hover:bg-muted text-muted-foreground"
                           }`}
                         >
