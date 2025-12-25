@@ -7,7 +7,7 @@ import { Plus, Trash2, Edit, Play, ArrowLeft, Type, Save, Palette, Timer } from 
 import { toast } from "sonner";
 
 const COLOR_THEMES: { id: ColorTheme; name: string; colors: string[] }[] = [
-  { id: 'babyShower', name: 'Baby Shower', colors: ['#FFB6C1', '#87CEEB', '#FFFACD', '#98FB98', '#E6E6FA'] },
+  { id: 'babyShower', name: 'Rose Pink', colors: ['#FFB6C1', '#87CEEB', '#FFFACD', '#98FB98', '#E6E6FA'] },
   { id: 'ocean', name: 'Ocean Breeze', colors: ['#0077B6', '#00B4D8', '#90E0EF', '#CAF0F8', '#023E8A'] },
   { id: 'sunset', name: 'Sunset Glow', colors: ['#FF6B6B', '#FFA07A', '#FFD93D', '#FF8C42', '#C44536'] },
   { id: 'forest', name: 'Forest Green', colors: ['#2D6A4F', '#40916C', '#52B788', '#74C69D', '#95D5B2'] },
