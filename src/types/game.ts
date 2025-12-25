@@ -42,6 +42,8 @@ export type ColorTheme = 'babyShower' | 'ocean' | 'sunset' | 'forest' | 'royal';
 export interface GlobalSettings {
   homeScreenTexts: HomeScreenText[];
   colorTheme: ColorTheme;
+  timerEnabled: boolean;
+  timerDuration: number; // in seconds
 }
 
 export interface GameState {

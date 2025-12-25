@@ -119,6 +119,8 @@ export const getGlobalSettings = (): GlobalSettings => {
       { id: crypto.randomUUID(), text: "Gender Reveal Jeopardy!", style: "title" as const },
     ],
     colorTheme: 'babyShower',
+    timerEnabled: false,
+    timerDuration: 30,
   };
   if (!stored) {
     return defaultSettings;
