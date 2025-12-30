@@ -44,6 +44,7 @@ export interface GameVersion {
   categories: Category[];
   categoryCount: number;
   questionsPerCategory: number;
+  playerCount: number;
 }
 
 export type ColorTheme = 'babyShower' | 'ocean' | 'sunset' | 'forest' | 'royal';

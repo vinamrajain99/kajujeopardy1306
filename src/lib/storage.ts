@@ -45,6 +45,7 @@ export const createEmptyGame = (name: string, categoryCount = 5, questionsPerCat
     createdAt: new Date().toISOString(),
     categoryCount,
     questionsPerCategory,
+    playerCount: 2,
     categories: Array.from({ length: categoryCount }, (_, catIndex) => ({
       id: crypto.randomUUID(),
       name: `Category ${catIndex + 1}`,
@@ -107,6 +108,7 @@ export const resizeGame = (game: GameVersion, newCategoryCount: number, newQuest
     ...game,
     categoryCount: newCategoryCount,
     questionsPerCategory: newQuestionsPerCategory,
+    playerCount: game.playerCount || 2,
     categories: resizedCategories,
   };
 };
