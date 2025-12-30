@@ -9,13 +9,12 @@ interface QuestionScreenProps {
   question: Question;
   categoryName: string;
   onBack: () => void;
-  onCorrect: (player: 1 | 2) => void;
-  onWrong: () => void;
-  player1Name: string;
-  player2Name: string;
-  player1Score: number;
-  player2Score: number;
-  currentAnswer?: 1 | 2 | null;
+  onCorrect: (playerIndex: number) => void;
+  playerNames: string[];
+  scores: number[];
+  currentAnswer: number | null;
+  playerColors: string[];
+  playerBgColors: string[];
 }
 
 export const QuestionScreen = ({
@@ -23,16 +22,16 @@ export const QuestionScreen = ({
   categoryName,
   onBack,
   onCorrect,
-  player1Name,
-  player2Name,
-  player1Score,
-  player2Score,
+  playerNames,
+  scores,
   currentAnswer,
+  playerColors,
+  playerBgColors,
 }: QuestionScreenProps) => {
   const [showAnswer, setShowAnswer] = useState(false);
   const [selectedOption, setSelectedOption] = useState<number | null>(null);
   const [currentImageIndex, setCurrentImageIndex] = useState(0);
-  const [selectedPlayer, setSelectedPlayer] = useState<1 | 2 | null>(currentAnswer || null);
+  const [selectedPlayer, setSelectedPlayer] = useState<number | null>(currentAnswer);
   
   // Timer state
   const settings = getGlobalSettings();
@@ -74,13 +73,13 @@ export const QuestionScreen = ({
     }
   };
 
-  const handlePlayerSelect = (player: 1 | 2) => {
-    if (selectedPlayer === player) {
+  const handlePlayerSelect = (playerIndex: number) => {
+    if (selectedPlayer === playerIndex) {
       setSelectedPlayer(null);
-      onCorrect(player);
+      onCorrect(playerIndex);
     } else {
-      setSelectedPlayer(player);
-      onCorrect(player);
+      setSelectedPlayer(playerIndex);
+      onCorrect(playerIndex);
     }
   };
 
@@ -142,16 +141,16 @@ export const QuestionScreen = ({
           </div>
         )}
         
-        {/* Scoreboard */}
-        <div className="flex items-center gap-3">
-          <div className="glass rounded-lg px-3 py-1.5 text-center">
-            <p className="text-[10px] text-muted-foreground font-medium">{player1Name}</p>
-            <p className="font-display text-base text-pink">{player1Score}</p>
-          </div>
-          <div className="glass rounded-lg px-3 py-1.5 text-center">
-            <p className="text-[10px] text-muted-foreground font-medium">{player2Name}</p>
-            <p className="font-display text-base text-blue">{player2Score}</p>
-          </div>
+        {/* Dynamic Scoreboard */}
+        <div className="flex items-center gap-2 flex-wrap justify-end">
+          {playerNames.map((name, index) => (
+            <div key={index} className="glass rounded-lg px-2 py-1 text-center">
+              <p className="text-[9px] text-muted-foreground font-medium truncate max-w-[50px]">{name}</p>
+              <p className={`font-display text-sm ${playerColors[index % playerColors.length]}`}>
+                {scores[index]}
+              </p>
+            </div>
+          ))}
         </div>
       </div>
 
@@ -254,45 +253,41 @@ export const QuestionScreen = ({
       </div>
 
       {/* Action Buttons - Fixed at Bottom */}
-      <div className="flex flex-wrap justify-center gap-3 mt-4 pt-4 border-t border-border/30">
-        <Button
-          variant={selectedPlayer === 1 ? "default" : "outline"}
-          size="default"
-          onClick={() => handlePlayerSelect(1)}
-          className={selectedPlayer === 1 ? "bg-pink hover:bg-pink/90" : ""}
-        >
-          {player1Name} {selectedPlayer === 1 && "✓"}
-        </Button>
-        <Button
-          variant={selectedPlayer === 2 ? "default" : "outline"}
-          size="default"
-          onClick={() => handlePlayerSelect(2)}
-          className={selectedPlayer === 2 ? "bg-blue hover:bg-blue/90" : ""}
-        >
-          {player2Name} {selectedPlayer === 2 && "✓"}
-        </Button>
+      <div className="flex flex-wrap justify-center gap-2 mt-4 pt-4 border-t border-border/30">
+        {/* Player selection buttons */}
+        {playerNames.map((name, index) => (
+          <Button
+            key={index}
+            variant={selectedPlayer === index ? "default" : "outline"}
+            size="sm"
+            onClick={() => handlePlayerSelect(index)}
+            className={selectedPlayer === index ? playerBgColors[index % playerBgColors.length] : ""}
+          >
+            {name} {selectedPlayer === index && "✓"}
+          </Button>
+        ))}
 
         <Button
           variant={showAnswer ? "outline" : "gold"}
-          size="default"
+          size="sm"
           onClick={handleRevealAnswer}
         >
           {showAnswer ? (
             <>
-              <EyeOff className="w-4 h-4 mr-2" />
-              Hide Answer
+              <EyeOff className="w-4 h-4 mr-1" />
+              Hide
             </>
           ) : (
             <>
-              <Eye className="w-4 h-4 mr-2" />
-              Reveal Answer
+              <Eye className="w-4 h-4 mr-1" />
+              Reveal
             </>
           )}
         </Button>
 
-        <Button variant="outline" size="default" onClick={onBack}>
-          <ArrowLeft className="w-4 h-4 mr-2" />
-          Back to Board
+        <Button variant="outline" size="sm" onClick={onBack}>
+          <ArrowLeft className="w-4 h-4 mr-1" />
+          Back
         </Button>
       </div>
     </div>
