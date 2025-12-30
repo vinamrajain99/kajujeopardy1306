@@ -3,7 +3,7 @@ import { GameVersion, HomeScreenSettings, HomeScreenImage, ColorTheme } from "@/
 import { getStoredGames, deleteGame, createEmptyGame, saveGame, getGlobalSettings, saveGlobalSettings } from "@/lib/storage";
 import { GameEditor } from "./GameEditor";
 import { Button } from "@/components/ui/button";
-import { Plus, Trash2, Edit, Play, ArrowLeft, Settings, Save, Palette, Timer } from "lucide-react";
+import { Plus, Trash2, Edit, Play, ArrowLeft, Settings, Save, Palette, Timer, Users } from "lucide-react";
 import { toast } from "sonner";
 
 const COLOR_THEMES: { id: ColorTheme; name: string; colors: string[] }[] = [
@@ -366,6 +366,22 @@ export const AdminDashboard = ({ onPlayGame, onBack }: AdminDashboardProps) => {
                   </p>
                 </div>
                 <div className="flex items-center gap-3">
+                  <div className="flex items-center gap-2">
+                    <Users className="w-4 h-4 text-muted-foreground" />
+                    <select
+                      value={game.playerCount || 2}
+                      onChange={(e) => {
+                        const updated = { ...game, playerCount: parseInt(e.target.value) };
+                        saveGame(updated);
+                        setGames(getStoredGames());
+                      }}
+                      className="bg-input border border-border rounded-lg px-2 py-1 text-sm text-foreground focus:ring-2 focus:ring-primary focus:border-transparent"
+                    >
+                      {[2, 3, 4, 5, 6, 7, 8, 9, 10].map((num) => (
+                        <option key={num} value={num}>{num} players</option>
+                      ))}
+                    </select>
+                  </div>
                   <Button
                     variant="outline"
                     size="icon"
