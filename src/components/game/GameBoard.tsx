@@ -11,17 +11,48 @@ interface GameBoardProps {
   onExit: () => void;
 }
 
+const PLAYER_COLORS = [
+  'text-pink',
+  'text-blue',
+  'text-yellow',
+  'text-mint',
+  'text-lavender',
+  'text-primary',
+  'text-secondary',
+  'text-accent',
+  'text-success',
+  'text-destructive',
+];
+
+const PLAYER_BG_COLORS = [
+  'bg-pink hover:bg-pink/90',
+  'bg-blue hover:bg-blue/90',
+  'bg-yellow hover:bg-yellow/90',
+  'bg-mint hover:bg-mint/90',
+  'bg-lavender hover:bg-lavender/90',
+  'bg-primary hover:bg-primary/90',
+  'bg-secondary hover:bg-secondary/90',
+  'bg-accent hover:bg-accent/90',
+  'bg-success hover:bg-success/90',
+  'bg-destructive hover:bg-destructive/90',
+];
+
 export const GameBoard = ({ game, onExit }: GameBoardProps) => {
+  const playerCount = game.playerCount || 2;
+  
   const [revealedCards, setRevealedCards] = useState<Set<string>>(new Set());
-  const [cardAnswers, setCardAnswers] = useState<Record<string, 1 | 2 | null>>({});
+  const [cardAnswers, setCardAnswers] = useState<Record<string, number | null>>({});
   const [currentQuestion, setCurrentQuestion] = useState<{
     categoryIndex: number;
     questionIndex: number;
     isReview?: boolean;
   } | null>(null);
-  const [scores, setScores] = useState({ player1: 0, player2: 0 });
-  const [player1Name, setPlayer1Name] = useState("Player 1");
-  const [player2Name, setPlayer2Name] = useState("Player 2");
+  
+  // Dynamic scores and names for all players
+  const [scores, setScores] = useState<number[]>(Array(playerCount).fill(0));
+  const [playerNames, setPlayerNames] = useState<string[]>(
+    Array.from({ length: playerCount }, (_, i) => `Player ${i + 1}`)
+  );
   const [isEditingNames, setIsEditingNames] = useState(true);
 
   const handleCardSelect = (categoryIndex: number, questionIndex: number) => {
@@ -43,7 +74,7 @@ export const GameBoard = ({ game, onExit }: GameBoardProps) => {
     setCurrentQuestion(null);
   };
 
-  const handleCorrect = (player: 1 | 2) => {
+  const handleCorrect = (playerIndex: number) => {
     if (!currentQuestion) return;
     const cardId = `${currentQuestion.categoryIndex}-${currentQuestion.questionIndex}`;
     const points =
@@ -54,38 +85,38 @@ export const GameBoard = ({ game, onExit }: GameBoardProps) => {
     const previousAnswer = cardAnswers[cardId];
     
     // If clicking the same player, deselect (toggle off)
-    if (previousAnswer === player) {
-      setScores((prev) => ({
-        ...prev,
-        [player === 1 ? "player1" : "player2"]:
-          prev[player === 1 ? "player1" : "player2"] - points,
-      }));
+    if (previousAnswer === playerIndex) {
+      setScores((prev) => {
+        const newScores = [...prev];
+        newScores[playerIndex] = newScores[playerIndex] - points;
+        return newScores;
+      });
       setCardAnswers((prev) => ({ ...prev, [cardId]: null }));
       return;
     }
     
     // If changing from one player to another, subtract from previous
-    if (previousAnswer) {
-      setScores((prev) => ({
-        ...prev,
-        [previousAnswer === 1 ? "player1" : "player2"]:
-          prev[previousAnswer === 1 ? "player1" : "player2"] - points,
-      }));
+    if (previousAnswer !== undefined && previousAnswer !== null) {
+      setScores((prev) => {
+        const newScores = [...prev];
+        newScores[previousAnswer] = newScores[previousAnswer] - points;
+        return newScores;
+      });
     }
     
     // Add points to new player
-    setCardAnswers((prev) => ({ ...prev, [cardId]: player }));
-    setScores((prev) => ({
-      ...prev,
-      [player === 1 ? "player1" : "player2"]:
-        prev[player === 1 ? "player1" : "player2"] + points,
-    }));
+    setCardAnswers((prev) => ({ ...prev, [cardId]: playerIndex }));
+    setScores((prev) => {
+      const newScores = [...prev];
+      newScores[playerIndex] = newScores[playerIndex] + points;
+      return newScores;
+    });
   };
 
   const handleReset = () => {
     setRevealedCards(new Set());
     setCardAnswers({});
-    setScores({ player1: 0, player2: 0 });
+    setScores(Array(playerCount).fill(0));
     setCurrentQuestion(null);
   };
 
@@ -97,48 +128,45 @@ export const GameBoard = ({ game, onExit }: GameBoardProps) => {
   if (isEditingNames) {
     return (
       <div className="min-h-screen bg-background confetti-bg flex items-center justify-center p-4">
-        <div className="glass rounded-2xl p-6 max-w-sm w-full animate-scale-in">
+        <div className="glass rounded-2xl p-6 max-w-md w-full animate-scale-in">
           <h1 className="font-display text-2xl text-primary text-center mb-6">
             {game.name}
           </h1>
-          <div className="space-y-4">
-            <div>
-              <label className="block text-xs text-muted-foreground mb-1 font-medium">
-                Player 1
-              </label>
-              <input
-                type="text"
-                value={player1Name}
-                onChange={(e) => setPlayer1Name(e.target.value)}
-                className="w-full bg-input border border-border rounded-lg px-3 py-2 text-sm text-foreground focus:ring-2 focus:ring-primary focus:border-transparent"
-                placeholder="Enter name"
-              />
-            </div>
-            <div>
-              <label className="block text-xs text-muted-foreground mb-1 font-medium">
-                Player 2
-              </label>
-              <input
-                type="text"
-                value={player2Name}
-                onChange={(e) => setPlayer2Name(e.target.value)}
-                className="w-full bg-input border border-border rounded-lg px-3 py-2 text-sm text-foreground focus:ring-2 focus:ring-primary focus:border-transparent"
-                placeholder="Enter name"
-              />
-            </div>
-            <Button
-              variant="gold"
-              size="lg"
-              className="w-full"
-              onClick={() => setIsEditingNames(false)}
-            >
-              Start Game
-            </Button>
-            <Button variant="ghost" size="sm" className="w-full" onClick={onExit}>
-              <ArrowLeft className="w-4 h-4 mr-1" />
-              Back
-            </Button>
+          <p className="text-sm text-muted-foreground text-center mb-4">
+            Enter names for {playerCount} players
+          </p>
+          <div className="space-y-3 max-h-[50vh] overflow-y-auto pr-2">
+            {playerNames.map((name, index) => (
+              <div key={index}>
+                <label className="block text-xs text-muted-foreground mb-1 font-medium">
+                  Player {index + 1}
+                </label>
+                <input
+                  type="text"
+                  value={name}
+                  onChange={(e) => {
+                    const newNames = [...playerNames];
+                    newNames[index] = e.target.value;
+                    setPlayerNames(newNames);
+                  }}
+                  className="w-full bg-input border border-border rounded-lg px-3 py-2 text-sm text-foreground focus:ring-2 focus:ring-primary focus:border-transparent"
+                  placeholder="Enter name"
+                />
+              </div>
+            ))}
           </div>
+          <Button
+            variant="gold"
+            size="lg"
+            className="w-full mt-4"
+            onClick={() => setIsEditingNames(false)}
+          >
+            Start Game
+          </Button>
+          <Button variant="ghost" size="sm" className="w-full mt-2" onClick={onExit}>
+            <ArrowLeft className="w-4 h-4 mr-1" />
+            Back
+          </Button>
         </div>
       </div>
     );
@@ -154,12 +182,11 @@ export const GameBoard = ({ game, onExit }: GameBoardProps) => {
         categoryName={category.name}
         onBack={handleBack}
         onCorrect={handleCorrect}
-        onWrong={handleBack}
-        player1Name={player1Name}
-        player2Name={player2Name}
-        player1Score={scores.player1}
-        player2Score={scores.player2}
-        currentAnswer={cardAnswers[cardId]}
+        playerNames={playerNames}
+        scores={scores}
+        currentAnswer={cardAnswers[cardId] ?? null}
+        playerColors={PLAYER_COLORS}
+        playerBgColors={PLAYER_BG_COLORS}
       />
     );
   }
@@ -198,16 +225,16 @@ export const GameBoard = ({ game, onExit }: GameBoardProps) => {
           </h1>
         </div>
 
-        {/* Scoreboard */}
-        <div className="flex items-center gap-2">
-          <div className="glass rounded-lg px-2 py-1 text-center">
-            <p className="text-[9px] text-muted-foreground font-medium">{player1Name}</p>
-            <p className="font-display text-sm text-pink">{scores.player1}</p>
-          </div>
-          <div className="glass rounded-lg px-2 py-1 text-center">
-            <p className="text-[9px] text-muted-foreground font-medium">{player2Name}</p>
-            <p className="font-display text-sm text-blue">{scores.player2}</p>
-          </div>
+        {/* Dynamic Scoreboard */}
+        <div className="flex items-center gap-2 flex-wrap justify-center">
+          {playerNames.map((name, index) => (
+            <div key={index} className="glass rounded-lg px-2 py-1 text-center">
+              <p className="text-[9px] text-muted-foreground font-medium truncate max-w-[60px]">{name}</p>
+              <p className={`font-display text-sm ${PLAYER_COLORS[index % PLAYER_COLORS.length]}`}>
+                {scores[index]}
+              </p>
+            </div>
+          ))}
           <Button variant="ghost" size="icon" className="h-8 w-8" onClick={handleReset}>
             <RotateCcw className="w-3 h-3" />
           </Button>
