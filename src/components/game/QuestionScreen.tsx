@@ -1,6 +1,5 @@
 import { useState, useEffect, useRef } from "react";
-import { Question, MCQOption } from "@/types/game";
-import { getGlobalSettings } from "@/lib/storage";
+import { Question, MCQOption, GlobalSettings } from "@/types/game";
 import { Button } from "@/components/ui/button";
 import { ArrowLeft, Eye, EyeOff, Check, X, Pause, Play } from "lucide-react";
 import confetti from "canvas-confetti";
@@ -15,6 +14,7 @@ interface QuestionScreenProps {
   currentAnswer: number | null;
   playerColors: string[];
   playerBgColors: string[];
+  settings: GlobalSettings;
 }
 
 export const QuestionScreen = ({
@@ -27,6 +27,7 @@ export const QuestionScreen = ({
   currentAnswer,
   playerColors,
   playerBgColors,
+  settings,
 }: QuestionScreenProps) => {
   const [showAnswer, setShowAnswer] = useState(false);
   const [selectedOption, setSelectedOption] = useState<number | null>(null);
@@ -34,7 +35,6 @@ export const QuestionScreen = ({
   const [selectedPlayer, setSelectedPlayer] = useState<number | null>(currentAnswer);
   
   // Timer state
-  const settings = getGlobalSettings();
   const [timeLeft, setTimeLeft] = useState(settings.timerDuration);
   const [timerPaused, setTimerPaused] = useState(false);
   const timerRef = useRef<NodeJS.Timeout | null>(null);

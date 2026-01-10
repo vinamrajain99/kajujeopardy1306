@@ -1,5 +1,6 @@
-import { useState } from "react";
-import { GameVersion } from "@/types/game";
+import { useState, useEffect } from "react";
+import { GameVersion, GlobalSettings } from "@/types/game";
+import { getGlobalSettings } from "@/lib/storage";
 import { GameCard } from "./GameCard";
 import { CategoryHeader } from "./CategoryHeader";
 import { QuestionScreen } from "./QuestionScreen";
@@ -37,6 +38,14 @@ const PLAYER_BG_COLORS = [
   'bg-destructive hover:bg-destructive/90',
 ];
 
+const defaultSettings: GlobalSettings = {
+  homeScreenTexts: [],
+  homeScreen: { heading: "Gender Reveal Jeopardy!", image: 'baby' },
+  colorTheme: 'babyShower',
+  timerEnabled: false,
+  timerDuration: 30,
+};
+
 export const GameBoard = ({ game, onExit }: GameBoardProps) => {
   const playerCount = game.playerCount || 2;
   
@@ -54,6 +63,19 @@ export const GameBoard = ({ game, onExit }: GameBoardProps) => {
     Array.from({ length: playerCount }, (_, i) => `Player ${i + 1}`)
   );
   const [isEditingNames, setIsEditingNames] = useState(true);
+  const [settings, setSettings] = useState<GlobalSettings>(defaultSettings);
+
+  useEffect(() => {
+    const loadSettings = async () => {
+      try {
+        const loadedSettings = await getGlobalSettings();
+        setSettings(loadedSettings);
+      } catch (error) {
+        console.error("Error loading settings:", error);
+      }
+    };
+    loadSettings();
+  }, []);
 
   const handleCardSelect = (categoryIndex: number, questionIndex: number) => {
     setCurrentQuestion({ categoryIndex, questionIndex, isReview: false });
@@ -187,6 +209,7 @@ export const GameBoard = ({ game, onExit }: GameBoardProps) => {
         currentAnswer={cardAnswers[cardId] ?? null}
         playerColors={PLAYER_COLORS}
         playerBgColors={PLAYER_BG_COLORS}
+        settings={settings}
       />
     );
   }

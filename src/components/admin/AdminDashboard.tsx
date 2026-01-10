@@ -43,48 +43,90 @@ export const AdminDashboard = ({ onPlayGame, onBack }: AdminDashboardProps) => {
   const [colorTheme, setColorTheme] = useState<ColorTheme>('babyShower');
   const [timerEnabled, setTimerEnabled] = useState(false);
   const [timerDuration, setTimerDuration] = useState(30);
+  const [isLoading, setIsLoading] = useState(true);
+
+  const loadData = async () => {
+    setIsLoading(true);
+    try {
+      const [gamesData, settings] = await Promise.all([
+        getStoredGames(),
+        getGlobalSettings()
+      ]);
+      setGames(gamesData);
+      setHomeScreen(settings.homeScreen);
+      setColorTheme(settings.colorTheme);
+      setTimerEnabled(settings.timerEnabled);
+      setTimerDuration(settings.timerDuration);
+    } catch (error) {
+      console.error("Error loading data:", error);
+      toast.error("Failed to load data");
+    } finally {
+      setIsLoading(false);
+    }
+  };
 
   useEffect(() => {
-    setGames(getStoredGames());
-    const settings = getGlobalSettings();
-    setHomeScreen(settings.homeScreen);
-    setColorTheme(settings.colorTheme);
-    setTimerEnabled(settings.timerEnabled);
-    setTimerDuration(settings.timerDuration);
+    loadData();
   }, []);
 
-  const handleCreateGame = () => {
+  const handleCreateGame = async () => {
     const name = prompt("Enter game name:");
     if (!name) return;
     const newGame = createEmptyGame(name);
-    saveGame(newGame);
-    setGames(getStoredGames());
-    setEditingGame(newGame);
-    toast.success("Game created!");
+    try {
+      await saveGame(newGame);
+      const updatedGames = await getStoredGames();
+      setGames(updatedGames);
+      setEditingGame(newGame);
+      toast.success("Game created!");
+    } catch (error) {
+      toast.error("Failed to create game");
+    }
   };
 
-  const handleDeleteGame = (gameId: string) => {
+  const handleDeleteGame = async (gameId: string) => {
     if (!confirm("Are you sure you want to delete this game?")) return;
-    deleteGame(gameId);
-    setGames(getStoredGames());
-    toast.success("Game deleted!");
+    try {
+      await deleteGame(gameId);
+      const updatedGames = await getStoredGames();
+      setGames(updatedGames);
+      toast.success("Game deleted!");
+    } catch (error) {
+      toast.error("Failed to delete game");
+    }
   };
 
-  const handleSaveGame = (game: GameVersion) => {
-    setGames(getStoredGames());
+  const handleSaveGame = async () => {
+    const updatedGames = await getStoredGames();
+    setGames(updatedGames);
   };
 
-  const saveSettings = () => {
-    saveGlobalSettings({ 
-      homeScreenTexts: [], 
-      homeScreen, 
-      colorTheme, 
-      timerEnabled, 
-      timerDuration 
-    });
-    applyColorTheme(colorTheme);
-    toast.success("Settings saved!");
-    setShowHomeScreenEditor(false);
+  const saveSettings = async () => {
+    try {
+      await saveGlobalSettings({ 
+        homeScreenTexts: [], 
+        homeScreen, 
+        colorTheme, 
+        timerEnabled, 
+        timerDuration 
+      });
+      applyColorTheme(colorTheme);
+      toast.success("Settings saved!");
+      setShowHomeScreenEditor(false);
+    } catch (error) {
+      toast.error("Failed to save settings");
+    }
+  };
+
+  const handlePlayerCountChange = async (game: GameVersion, playerCount: number) => {
+    const updated = { ...game, playerCount };
+    try {
+      await saveGame(updated);
+      const updatedGames = await getStoredGames();
+      setGames(updatedGames);
+    } catch (error) {
+      toast.error("Failed to update player count");
+    }
   };
 
   const applyColorTheme = (theme: ColorTheme) => {
@@ -313,6 +355,17 @@ export const AdminDashboard = ({ onPlayGame, onBack }: AdminDashboardProps) => {
     );
   }
 
+  if (isLoading) {
+    return (
+      <div className="min-h-screen bg-background flex items-center justify-center">
+        <div className="text-center">
+          <div className="animate-spin rounded-full h-12 w-12 border-b-2 border-primary mx-auto mb-4"></div>
+          <p className="text-muted-foreground">Loading games...</p>
+        </div>
+      </div>
+    );
+  }
+
   return (
     <div className="min-h-screen bg-background p-4 md:p-8">
       <div className="max-w-4xl mx-auto">
@@ -370,11 +423,7 @@ export const AdminDashboard = ({ onPlayGame, onBack }: AdminDashboardProps) => {
                     <Users className="w-4 h-4 text-muted-foreground" />
                     <select
                       value={game.playerCount || 2}
-                      onChange={(e) => {
-                        const updated = { ...game, playerCount: parseInt(e.target.value) };
-                        saveGame(updated);
-                        setGames(getStoredGames());
-                      }}
+                      onChange={(e) => handlePlayerCountChange(game, parseInt(e.target.value))}
                       className="bg-input border border-border rounded-lg px-2 py-1 text-sm text-foreground focus:ring-2 focus:ring-primary focus:border-transparent"
                     >
                       {[2, 3, 4, 5, 6, 7, 8, 9, 10].map((num) => (

@@ -1,5 +1,5 @@
-import { useState } from "react";
-import { GameVersion, HomeScreenImage } from "@/types/game";
+import { useState, useEffect } from "react";
+import { GameVersion, HomeScreenImage, HomeScreenSettings } from "@/types/game";
 import { getStoredGames, getGlobalSettings } from "@/lib/storage";
 import { GameBoard } from "@/components/game/GameBoard";
 import { AdminDashboard } from "@/components/admin/AdminDashboard";
@@ -27,6 +27,25 @@ const Index = () => {
   const [selectedGame, setSelectedGame] = useState<GameVersion | null>(null);
   const [showGameSelector, setShowGameSelector] = useState(false);
   const [availableGames, setAvailableGames] = useState<GameVersion[]>([]);
+  const [homeScreen, setHomeScreen] = useState<HomeScreenSettings>({
+    heading: "Gender Reveal Jeopardy!",
+    image: 'baby',
+  });
+  const [isLoading, setIsLoading] = useState(true);
+
+  useEffect(() => {
+    const loadSettings = async () => {
+      try {
+        const settings = await getGlobalSettings();
+        setHomeScreen(settings.homeScreen);
+      } catch (error) {
+        console.error("Error loading settings:", error);
+      } finally {
+        setIsLoading(false);
+      }
+    };
+    loadSettings();
+  }, []);
 
   const handlePlayGame = (game: GameVersion) => {
     setShowGameSelector(false);
@@ -34,8 +53,8 @@ const Index = () => {
     setView("game");
   };
 
-  const handleSelectGameToPlay = () => {
-    const games = getStoredGames();
+  const handleSelectGameToPlay = async () => {
+    const games = await getStoredGames();
     if (games.length === 0) {
       setView("admin");
       return;
@@ -70,9 +89,13 @@ const Index = () => {
     );
   }
 
-  // Get global home screen settings
-  const globalSettings = getGlobalSettings();
-  const homeScreen = globalSettings.homeScreen;
+  if (isLoading) {
+    return (
+      <div className="min-h-screen bg-background flex items-center justify-center">
+        <div className="animate-spin rounded-full h-12 w-12 border-b-2 border-primary"></div>
+      </div>
+    );
+  }
 
   return (
     <div className="min-h-screen bg-background confetti-bg flex flex-col items-center justify-center p-4 relative overflow-hidden">
