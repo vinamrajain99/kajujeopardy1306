@@ -1,6 +1,7 @@
-import { useState } from "react";
+import { useState, useEffect, useCallback } from "react";
 import { GameVersion, Category, Question, MCQOption } from "@/types/game";
-import { saveGame, resizeGame } from "@/lib/storage";
+import { saveGame, resizeGame, getGameById } from "@/lib/storage";
+import { useRealtimeSync } from "@/hooks/useRealtimeSync";
 import { Button } from "@/components/ui/button";
 import { ArrowLeft, Save, Plus, Trash2, Image as ImageIcon, Grid3X3 } from "lucide-react";
 import { toast } from "sonner";
@@ -15,14 +16,41 @@ export const GameEditor = ({ game: initialGame, onBack, onSave }: GameEditorProp
   const [game, setGame] = useState<GameVersion>(initialGame);
   const [selectedCategory, setSelectedCategory] = useState(0);
   const [selectedQuestion, setSelectedQuestion] = useState(0);
+  const [isSaving, setIsSaving] = useState(false);
 
   const currentCategory = game.categories[selectedCategory];
   const currentQuestion = currentCategory?.questions[selectedQuestion];
 
-  const handleSave = () => {
-    saveGame(game);
-    onSave(game);
-    toast.success("Game saved successfully!");
+  // Real-time sync: refresh game data when changes come from other devices
+  const handleRealtimeUpdate = useCallback(async () => {
+    if (isSaving) return; // Don't overwrite while we're saving
+    try {
+      const updatedGame = await getGameById(game.id);
+      if (updatedGame) {
+        setGame(updatedGame);
+        toast.info("Game updated from another device");
+      }
+    } catch (error) {
+      console.error("Error refreshing game:", error);
+    }
+  }, [game.id, isSaving]);
+
+  useRealtimeSync(handleRealtimeUpdate, undefined);
+
+  // Update local state when initialGame prop changes
+  useEffect(() => {
+    setGame(initialGame);
+  }, [initialGame]);
+
+  const handleSave = async () => {
+    setIsSaving(true);
+    try {
+      await saveGame(game);
+      onSave(game);
+      toast.success("Game saved successfully!");
+    } finally {
+      setIsSaving(false);
+    }
   };
 
   const updateCategoryName = (name: string) => {
