@@ -1,6 +1,7 @@
-import { useState, useEffect } from "react";
+import { useState, useEffect, useCallback } from "react";
 import { GameVersion, HomeScreenSettings, HomeScreenImage, ColorTheme } from "@/types/game";
 import { getStoredGames, deleteGame, createEmptyGame, saveGame, getGlobalSettings, saveGlobalSettings } from "@/lib/storage";
+import { useRealtimeSync } from "@/hooks/useRealtimeSync";
 import { GameEditor } from "./GameEditor";
 import { Button } from "@/components/ui/button";
 import { Plus, Trash2, Edit, Play, ArrowLeft, Settings, Save, Palette, Timer, Users } from "lucide-react";
@@ -45,8 +46,8 @@ export const AdminDashboard = ({ onPlayGame, onBack }: AdminDashboardProps) => {
   const [timerDuration, setTimerDuration] = useState(30);
   const [isLoading, setIsLoading] = useState(true);
 
-  const loadData = async () => {
-    setIsLoading(true);
+  const loadData = useCallback(async (showLoading = true) => {
+    if (showLoading) setIsLoading(true);
     try {
       const [gamesData, settings] = await Promise.all([
         getStoredGames(),
@@ -63,11 +64,18 @@ export const AdminDashboard = ({ onPlayGame, onBack }: AdminDashboardProps) => {
     } finally {
       setIsLoading(false);
     }
-  };
+  }, []);
 
   useEffect(() => {
     loadData();
-  }, []);
+  }, [loadData]);
+
+  // Real-time sync - refetch data when changes occur on other devices
+  const handleRealtimeUpdate = useCallback(() => {
+    loadData(false); // Don't show loading spinner for real-time updates
+  }, [loadData]);
+
+  useRealtimeSync(handleRealtimeUpdate, handleRealtimeUpdate);
 
   const handleCreateGame = async () => {
     const name = prompt("Enter game name:");
