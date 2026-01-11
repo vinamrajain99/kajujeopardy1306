@@ -1,10 +1,11 @@
 import { useState, useEffect, useCallback } from "react";
 import { GameVersion, HomeScreenSettings, HomeScreenImage, ColorTheme } from "@/types/game";
 import { getStoredGames, deleteGame, createEmptyGame, saveGame, getGlobalSettings, saveGlobalSettings } from "@/lib/storage";
+import { getActiveSession, restartGameSession } from "@/lib/gameSession";
 import { useRealtimeSync } from "@/hooks/useRealtimeSync";
 import { GameEditor } from "./GameEditor";
 import { Button } from "@/components/ui/button";
-import { Plus, Trash2, Edit, Play, ArrowLeft, Settings, Save, Palette, Timer, Users } from "lucide-react";
+import { Plus, Trash2, Edit, Play, ArrowLeft, Settings, Save, Palette, Timer, Users, RotateCcw } from "lucide-react";
 import { toast } from "sonner";
 
 const COLOR_THEMES: { id: ColorTheme; name: string; colors: string[] }[] = [
@@ -35,6 +36,7 @@ const HOME_SCREEN_IMAGES: { id: HomeScreenImage; emoji: string; name: string }[]
 
 export const AdminDashboard = ({ onPlayGame, onBack }: AdminDashboardProps) => {
   const [games, setGames] = useState<GameVersion[]>([]);
+  const [gameSessions, setGameSessions] = useState<Record<string, boolean>>({});
   const [editingGame, setEditingGame] = useState<GameVersion | null>(null);
   const [showHomeScreenEditor, setShowHomeScreenEditor] = useState(false);
   const [homeScreen, setHomeScreen] = useState<HomeScreenSettings>({
@@ -58,6 +60,14 @@ export const AdminDashboard = ({ onPlayGame, onBack }: AdminDashboardProps) => {
       setColorTheme(settings.colorTheme);
       setTimerEnabled(settings.timerEnabled);
       setTimerDuration(settings.timerDuration);
+      
+      // Check for active sessions for each game
+      const sessionStatus: Record<string, boolean> = {};
+      await Promise.all(gamesData.map(async (game) => {
+        const session = await getActiveSession(game.id);
+        sessionStatus[game.id] = !!session;
+      }));
+      setGameSessions(sessionStatus);
     } catch (error) {
       console.error("Error loading data:", error);
       toast.error("Failed to load data");
@@ -75,7 +85,7 @@ export const AdminDashboard = ({ onPlayGame, onBack }: AdminDashboardProps) => {
     loadData(false); // Don't show loading spinner for real-time updates
   }, [loadData]);
 
-  useRealtimeSync(handleRealtimeUpdate, handleRealtimeUpdate);
+  useRealtimeSync(handleRealtimeUpdate, handleRealtimeUpdate, handleRealtimeUpdate);
 
   const handleCreateGame = async () => {
     const name = prompt("Enter game name:");
@@ -134,6 +144,17 @@ export const AdminDashboard = ({ onPlayGame, onBack }: AdminDashboardProps) => {
       setGames(updatedGames);
     } catch (error) {
       toast.error("Failed to update player count");
+    }
+  };
+
+  const handleRestartGame = async (gameId: string) => {
+    if (!confirm("Are you sure you want to restart this game? This will delete all progress including scores and answered questions.")) return;
+    try {
+      await restartGameSession(gameId);
+      setGameSessions(prev => ({ ...prev, [gameId]: false }));
+      toast.success("Game progress reset! Start fresh when you play.");
+    } catch (error) {
+      toast.error("Failed to restart game");
     }
   };
 
@@ -416,51 +437,71 @@ export const AdminDashboard = ({ onPlayGame, onBack }: AdminDashboardProps) => {
             {games.map((game) => (
               <div
                 key={game.id}
-                className="glass rounded-xl p-6 flex items-center justify-between hover:glow-blue transition-all"
+                className="glass rounded-xl p-6 hover:glow-blue transition-all"
               >
-                <div>
-                  <h3 className="font-display text-2xl text-foreground">
-                    {game.name}
-                  </h3>
-                  <p className="text-sm text-muted-foreground">
-                    Created {new Date(game.createdAt).toLocaleDateString()}
-                  </p>
-                </div>
-                <div className="flex items-center gap-3">
-                  <div className="flex items-center gap-2">
-                    <Users className="w-4 h-4 text-muted-foreground" />
-                    <select
-                      value={game.playerCount || 2}
-                      onChange={(e) => handlePlayerCountChange(game, parseInt(e.target.value))}
-                      className="bg-input border border-border rounded-lg px-2 py-1 text-sm text-foreground focus:ring-2 focus:ring-primary focus:border-transparent"
-                    >
-                      {[2, 3, 4, 5, 6, 7, 8, 9, 10].map((num) => (
-                        <option key={num} value={num}>{num} players</option>
-                      ))}
-                    </select>
+                <div className="flex items-center justify-between">
+                  <div>
+                    <div className="flex items-center gap-2">
+                      <h3 className="font-display text-2xl text-foreground">
+                        {game.name}
+                      </h3>
+                      {gameSessions[game.id] && (
+                        <span className="text-xs bg-primary/20 text-primary px-2 py-0.5 rounded-full">
+                          In Progress
+                        </span>
+                      )}
+                    </div>
+                    <p className="text-sm text-muted-foreground">
+                      Created {new Date(game.createdAt).toLocaleDateString()}
+                    </p>
                   </div>
-                  <Button
-                    variant="outline"
-                    size="icon"
-                    onClick={() => setEditingGame(game)}
-                  >
-                    <Edit className="w-5 h-5" />
-                  </Button>
-                  <Button
-                    variant="gold"
-                    onClick={() => onPlayGame(game)}
-                  >
-                    <Play className="w-5 h-5 mr-2" />
-                    Play
-                  </Button>
-                  <Button
-                    variant="ghost"
-                    size="icon"
-                    onClick={() => handleDeleteGame(game.id)}
-                    className="text-destructive hover:text-destructive"
-                  >
-                    <Trash2 className="w-5 h-5" />
-                  </Button>
+                  <div className="flex items-center gap-3 flex-wrap">
+                    <div className="flex items-center gap-2">
+                      <Users className="w-4 h-4 text-muted-foreground" />
+                      <select
+                        value={game.playerCount || 2}
+                        onChange={(e) => handlePlayerCountChange(game, parseInt(e.target.value))}
+                        className="bg-input border border-border rounded-lg px-2 py-1 text-sm text-foreground focus:ring-2 focus:ring-primary focus:border-transparent"
+                      >
+                        {[2, 3, 4, 5, 6, 7, 8, 9, 10].map((num) => (
+                          <option key={num} value={num}>{num} players</option>
+                        ))}
+                      </select>
+                    </div>
+                    {gameSessions[game.id] && (
+                      <Button
+                        variant="outline"
+                        size="sm"
+                        onClick={() => handleRestartGame(game.id)}
+                        className="text-destructive hover:text-destructive"
+                      >
+                        <RotateCcw className="w-4 h-4 mr-1" />
+                        Restart
+                      </Button>
+                    )}
+                    <Button
+                      variant="outline"
+                      size="icon"
+                      onClick={() => setEditingGame(game)}
+                    >
+                      <Edit className="w-5 h-5" />
+                    </Button>
+                    <Button
+                      variant="gold"
+                      onClick={() => onPlayGame(game)}
+                    >
+                      <Play className="w-5 h-5 mr-2" />
+                      {gameSessions[game.id] ? "Resume" : "Play"}
+                    </Button>
+                    <Button
+                      variant="ghost"
+                      size="icon"
+                      onClick={() => handleDeleteGame(game.id)}
+                      className="text-destructive hover:text-destructive"
+                    >
+                      <Trash2 className="w-5 h-5" />
+                    </Button>
+                  </div>
                 </div>
               </div>
             ))}

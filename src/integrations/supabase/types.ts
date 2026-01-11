@@ -14,6 +14,50 @@ export type Database = {
   }
   public: {
     Tables: {
+      game_sessions: {
+        Row: {
+          card_answers: Json
+          created_at: string
+          game_id: string
+          id: string
+          is_active: boolean
+          player_names: Json
+          revealed_cards: Json
+          scores: Json
+          updated_at: string
+        }
+        Insert: {
+          card_answers?: Json
+          created_at?: string
+          game_id: string
+          id?: string
+          is_active?: boolean
+          player_names?: Json
+          revealed_cards?: Json
+          scores?: Json
+          updated_at?: string
+        }
+        Update: {
+          card_answers?: Json
+          created_at?: string
+          game_id?: string
+          id?: string
+          is_active?: boolean
+          player_names?: Json
+          revealed_cards?: Json
+          scores?: Json
+          updated_at?: string
+        }
+        Relationships: [
+          {
+            foreignKeyName: "game_sessions_game_id_fkey"
+            columns: ["game_id"]
+            isOneToOne: false
+            referencedRelation: "games"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
       games: {
         Row: {
           categories: Json
