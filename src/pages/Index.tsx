@@ -1,6 +1,7 @@
-import { useState, useEffect } from "react";
+import { useState, useEffect, useCallback } from "react";
 import { GameVersion, HomeScreenImage, HomeScreenSettings } from "@/types/game";
 import { getStoredGames, getGlobalSettings } from "@/lib/storage";
+import { useRealtimeSync } from "@/hooks/useRealtimeSync";
 import { GameBoard } from "@/components/game/GameBoard";
 import { AdminDashboard } from "@/components/admin/AdminDashboard";
 import { Button } from "@/components/ui/button";
@@ -33,19 +34,23 @@ const Index = () => {
   });
   const [isLoading, setIsLoading] = useState(true);
 
-  useEffect(() => {
-    const loadSettings = async () => {
-      try {
-        const settings = await getGlobalSettings();
-        setHomeScreen(settings.homeScreen);
-      } catch (error) {
-        console.error("Error loading settings:", error);
-      } finally {
-        setIsLoading(false);
-      }
-    };
-    loadSettings();
+  const loadSettings = useCallback(async () => {
+    try {
+      const settings = await getGlobalSettings();
+      setHomeScreen(settings.homeScreen);
+    } catch (error) {
+      console.error("Error loading settings:", error);
+    } finally {
+      setIsLoading(false);
+    }
   }, []);
+
+  useEffect(() => {
+    loadSettings();
+  }, [loadSettings]);
+
+  // Real-time sync for settings changes
+  useRealtimeSync(undefined, loadSettings);
 
   const handlePlayGame = (game: GameVersion) => {
     setShowGameSelector(false);
