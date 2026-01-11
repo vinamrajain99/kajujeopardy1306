@@ -203,7 +203,9 @@ export const getGlobalSettings = async (): Promise<GlobalSettings> => {
         image: 'baby',
       };
     }
-    return { ...defaultSettings, ...parsed };
+    // Merge homeScreen with defaults to ensure all properties exist
+    const mergedHomeScreen = { ...defaultHomeScreen, ...(parsed.homeScreen || {}) };
+    return { ...defaultSettings, ...parsed, homeScreen: mergedHomeScreen };
   } catch {
     return defaultSettings;
   }
