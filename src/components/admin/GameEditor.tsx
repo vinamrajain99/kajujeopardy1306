@@ -2,10 +2,10 @@ import { useState, useEffect, useCallback } from "react";
 import { GameVersion, Category, Question, MCQOption } from "@/types/game";
 import { saveGame, resizeGame, getGameById } from "@/lib/storage";
 import { useRealtimeSync } from "@/hooks/useRealtimeSync";
+import { ImageUpload } from "./ImageUpload";
 import { Button } from "@/components/ui/button";
-import { ArrowLeft, Save, Plus, Trash2, Image as ImageIcon, Grid3X3 } from "lucide-react";
+import { ArrowLeft, Save, Plus, Trash2, Grid3X3 } from "lucide-react";
 import { toast } from "sonner";
-
 interface GameEditorProps {
   game: GameVersion;
   onBack: () => void;
@@ -103,13 +103,10 @@ export const GameEditor = ({ game: initialGame, onBack, onSave }: GameEditorProp
     });
   };
 
-  const addImage = () => {
-    const url = prompt("Enter image URL:");
-    if (url) {
-      updateQuestion({
-        images: [...currentQuestion.images, url],
-      });
-    }
+  const addImage = (url: string) => {
+    updateQuestion({
+      images: [...currentQuestion.images, url],
+    });
   };
 
   const removeImage = (index: number) => {
@@ -391,10 +388,7 @@ export const GameEditor = ({ game: initialGame, onBack, onSave }: GameEditorProp
                   <label className="text-sm text-muted-foreground">
                     Context Images
                   </label>
-                  <Button variant="outline" size="sm" onClick={addImage}>
-                    <ImageIcon className="w-4 h-4 mr-1" />
-                    Add Image
-                  </Button>
+                  <ImageUpload onImageUploaded={addImage} />
                 </div>
                 {currentQuestion?.images.length > 0 && (
                   <div className="grid grid-cols-2 md:grid-cols-3 gap-3">

@@ -5,7 +5,8 @@ type RealtimeCallback = () => void;
 
 export const useRealtimeSync = (
   onGamesChange?: RealtimeCallback,
-  onSettingsChange?: RealtimeCallback
+  onSettingsChange?: RealtimeCallback,
+  onSessionsChange?: RealtimeCallback
 ) => {
   useEffect(() => {
     const channel = supabase
@@ -34,10 +35,22 @@ export const useRealtimeSync = (
           onSettingsChange?.();
         }
       )
+      .on(
+        'postgres_changes',
+        {
+          event: '*',
+          schema: 'public',
+          table: 'game_sessions'
+        },
+        () => {
+          console.log('Game sessions table changed, refetching...');
+          onSessionsChange?.();
+        }
+      )
       .subscribe();
 
     return () => {
       supabase.removeChannel(channel);
     };
-  }, [onGamesChange, onSettingsChange]);
+  }, [onGamesChange, onSettingsChange, onSessionsChange]);
 };

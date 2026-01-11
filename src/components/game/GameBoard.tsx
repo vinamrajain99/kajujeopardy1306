@@ -1,11 +1,19 @@
-import { useState, useEffect } from "react";
+import { useState, useEffect, useCallback } from "react";
 import { GameVersion, GlobalSettings } from "@/types/game";
 import { getGlobalSettings } from "@/lib/storage";
+import { 
+  getActiveSession, 
+  createGameSession, 
+  updateSessionProgress,
+  GameSession 
+} from "@/lib/gameSession";
+import { supabase } from "@/integrations/supabase/client";
 import { GameCard } from "./GameCard";
 import { CategoryHeader } from "./CategoryHeader";
 import { QuestionScreen } from "./QuestionScreen";
 import { Button } from "@/components/ui/button";
 import { ArrowLeft, RotateCcw } from "lucide-react";
+import { toast } from "sonner";
 
 interface GameBoardProps {
   game: GameVersion;
@@ -49,6 +57,7 @@ const defaultSettings: GlobalSettings = {
 export const GameBoard = ({ game, onExit }: GameBoardProps) => {
   const playerCount = game.playerCount || 2;
   
+  const [session, setSession] = useState<GameSession | null>(null);
   const [revealedCards, setRevealedCards] = useState<Set<string>>(new Set());
   const [cardAnswers, setCardAnswers] = useState<Record<string, number | null>>({});
   const [currentQuestion, setCurrentQuestion] = useState<{
@@ -57,25 +66,94 @@ export const GameBoard = ({ game, onExit }: GameBoardProps) => {
     isReview?: boolean;
   } | null>(null);
   
-  // Dynamic scores and names for all players
   const [scores, setScores] = useState<number[]>(Array(playerCount).fill(0));
   const [playerNames, setPlayerNames] = useState<string[]>(
     Array.from({ length: playerCount }, (_, i) => `Player ${i + 1}`)
   );
   const [isEditingNames, setIsEditingNames] = useState(true);
   const [settings, setSettings] = useState<GlobalSettings>(defaultSettings);
+  const [isLoading, setIsLoading] = useState(true);
 
+  // Load existing session or prepare for new one
   useEffect(() => {
-    const loadSettings = async () => {
+    const loadData = async () => {
+      setIsLoading(true);
       try {
-        const loadedSettings = await getGlobalSettings();
+        const [loadedSettings, existingSession] = await Promise.all([
+          getGlobalSettings(),
+          getActiveSession(game.id)
+        ]);
+        
         setSettings(loadedSettings);
+        
+        if (existingSession) {
+          // Resume existing session
+          setSession(existingSession);
+          setPlayerNames(existingSession.playerNames);
+          setScores(existingSession.scores);
+          setRevealedCards(new Set(existingSession.revealedCards));
+          setCardAnswers(existingSession.cardAnswers);
+          setIsEditingNames(false);
+          toast.info("Resuming previous game session");
+        }
       } catch (error) {
-        console.error("Error loading settings:", error);
+        console.error("Error loading data:", error);
+      } finally {
+        setIsLoading(false);
       }
     };
-    loadSettings();
-  }, []);
+    loadData();
+  }, [game.id]);
+
+  // Real-time sync for session updates
+  useEffect(() => {
+    if (!session?.id) return;
+
+    const channel = supabase
+      .channel(`session-${session.id}`)
+      .on(
+        'postgres_changes',
+        {
+          event: 'UPDATE',
+          schema: 'public',
+          table: 'game_sessions',
+          filter: `id=eq.${session.id}`
+        },
+        (payload) => {
+          const updated = payload.new as any;
+          setScores(updated.scores || []);
+          setRevealedCards(new Set(updated.revealed_cards || []));
+          setCardAnswers(updated.card_answers || {});
+          setPlayerNames(updated.player_names || []);
+        }
+      )
+      .subscribe();
+
+    return () => {
+      supabase.removeChannel(channel);
+    };
+  }, [session?.id]);
+
+  // Persist session changes
+  const persistProgress = useCallback(async (updates: {
+    scores?: number[];
+    revealedCards?: string[];
+    cardAnswers?: Record<string, number | null>;
+    playerNames?: string[];
+  }) => {
+    if (!session?.id) return;
+    await updateSessionProgress(session.id, updates);
+  }, [session?.id]);
+
+  const handleStartGame = async () => {
+    // Create a new session
+    const newSession = await createGameSession(game.id, playerNames, playerCount);
+    if (newSession) {
+      setSession(newSession);
+      toast.success("Game session started!");
+    }
+    setIsEditingNames(false);
+  };
 
   const handleCardSelect = (categoryIndex: number, questionIndex: number) => {
     setCurrentQuestion({ categoryIndex, questionIndex, isReview: false });
@@ -85,18 +163,19 @@ export const GameBoard = ({ game, onExit }: GameBoardProps) => {
     setCurrentQuestion({ categoryIndex, questionIndex, isReview: true });
   };
 
-  const handleBack = () => {
+  const handleBack = async () => {
     if (currentQuestion) {
       const cardId = `${currentQuestion.categoryIndex}-${currentQuestion.questionIndex}`;
-      // Only mark as revealed if it was visited (not just reviewed)
       if (!currentQuestion.isReview) {
-        setRevealedCards((prev) => new Set([...prev, cardId]));
+        const newRevealed = new Set([...revealedCards, cardId]);
+        setRevealedCards(newRevealed);
+        await persistProgress({ revealedCards: Array.from(newRevealed) });
       }
     }
     setCurrentQuestion(null);
   };
 
-  const handleCorrect = (playerIndex: number) => {
+  const handleCorrect = async (playerIndex: number) => {
     if (!currentQuestion) return;
     const cardId = `${currentQuestion.categoryIndex}-${currentQuestion.questionIndex}`;
     const points =
@@ -106,46 +185,67 @@ export const GameBoard = ({ game, onExit }: GameBoardProps) => {
     
     const previousAnswer = cardAnswers[cardId];
     
+    let newScores = [...scores];
+    let newCardAnswers = { ...cardAnswers };
+    
     // If clicking the same player, deselect (toggle off)
     if (previousAnswer === playerIndex) {
-      setScores((prev) => {
-        const newScores = [...prev];
-        newScores[playerIndex] = newScores[playerIndex] - points;
-        return newScores;
-      });
-      setCardAnswers((prev) => ({ ...prev, [cardId]: null }));
-      return;
-    }
-    
-    // If changing from one player to another, subtract from previous
-    if (previousAnswer !== undefined && previousAnswer !== null) {
-      setScores((prev) => {
-        const newScores = [...prev];
+      newScores[playerIndex] = newScores[playerIndex] - points;
+      newCardAnswers[cardId] = null;
+    } else {
+      // If changing from one player to another, subtract from previous
+      if (previousAnswer !== undefined && previousAnswer !== null) {
         newScores[previousAnswer] = newScores[previousAnswer] - points;
-        return newScores;
-      });
+      }
+      
+      // Add points to new player
+      newCardAnswers[cardId] = playerIndex;
+      newScores[playerIndex] = newScores[playerIndex] + points;
     }
     
-    // Add points to new player
-    setCardAnswers((prev) => ({ ...prev, [cardId]: playerIndex }));
-    setScores((prev) => {
-      const newScores = [...prev];
-      newScores[playerIndex] = newScores[playerIndex] + points;
-      return newScores;
-    });
+    setScores(newScores);
+    setCardAnswers(newCardAnswers);
+    
+    // Persist changes
+    await persistProgress({ scores: newScores, cardAnswers: newCardAnswers });
   };
 
-  const handleReset = () => {
-    setRevealedCards(new Set());
-    setCardAnswers({});
-    setScores(Array(playerCount).fill(0));
+  const handleReset = async () => {
+    if (!confirm("Are you sure you want to reset the game? This will clear all progress.")) return;
+    
+    const newScores = Array(playerCount).fill(0);
+    const newRevealed = new Set<string>();
+    const newAnswers: Record<string, number | null> = {};
+    
+    setRevealedCards(newRevealed);
+    setCardAnswers(newAnswers);
+    setScores(newScores);
     setCurrentQuestion(null);
+    
+    await persistProgress({
+      scores: newScores,
+      revealedCards: [],
+      cardAnswers: newAnswers
+    });
+    
+    toast.success("Game reset!");
   };
 
   // Check if a card is "complete" (has an answer assigned)
   const isCardComplete = (cardId: string) => {
     return cardAnswers[cardId] !== undefined && cardAnswers[cardId] !== null;
   };
+
+  if (isLoading) {
+    return (
+      <div className="min-h-screen bg-background flex items-center justify-center">
+        <div className="text-center">
+          <div className="animate-spin rounded-full h-12 w-12 border-b-2 border-primary mx-auto mb-4"></div>
+          <p className="text-muted-foreground">Loading game...</p>
+        </div>
+      </div>
+    );
+  }
 
   if (isEditingNames) {
     return (
@@ -181,7 +281,7 @@ export const GameBoard = ({ game, onExit }: GameBoardProps) => {
             variant="gold"
             size="lg"
             className="w-full mt-4"
-            onClick={() => setIsEditingNames(false)}
+            onClick={handleStartGame}
           >
             Start Game
           </Button>
