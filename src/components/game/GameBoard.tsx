@@ -231,6 +231,38 @@ export const GameBoard = ({ game, onExit }: GameBoardProps) => {
     toast.success("Game reset!");
   };
 
+  const handleResetCard = async (categoryIndex: number, questionIndex: number) => {
+    const cardId = `${categoryIndex}-${questionIndex}`;
+    
+    // Remove from revealed cards
+    const newRevealed = new Set(revealedCards);
+    newRevealed.delete(cardId);
+    
+    // Remove answer and adjust score if needed
+    const previousAnswer = cardAnswers[cardId];
+    const newScores = [...scores];
+    const newAnswers = { ...cardAnswers };
+    
+    if (previousAnswer !== undefined && previousAnswer !== null) {
+      const points = game.categories[categoryIndex].questions[questionIndex].points;
+      newScores[previousAnswer] -= points;
+    }
+    
+    delete newAnswers[cardId];
+    
+    setRevealedCards(newRevealed);
+    setCardAnswers(newAnswers);
+    setScores(newScores);
+    
+    await persistProgress({
+      scores: newScores,
+      revealedCards: Array.from(newRevealed),
+      cardAnswers: newAnswers
+    });
+    
+    toast.success("Question reset!");
+  };
+
   // Check if a card is "complete" (has an answer assigned)
   const isCardComplete = (cardId: string) => {
     return cardAnswers[cardId] !== undefined && cardAnswers[cardId] !== null;
@@ -392,6 +424,7 @@ export const GameBoard = ({ game, onExit }: GameBoardProps) => {
                   isComplete={isCardComplete(cardId)}
                   onSelect={() => handleCardSelect(colIndex, rowIndex)}
                   onReview={() => handleReview(colIndex, rowIndex)}
+                  onReset={() => handleResetCard(colIndex, rowIndex)}
                   compact={categoryCount >= 6 || questionsPerCategory >= 6}
                 />
               );
