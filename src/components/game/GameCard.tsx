@@ -1,5 +1,5 @@
 import { Question } from "@/types/game";
-import { Check, X, Eye } from "lucide-react";
+import { Check, X, Eye, RotateCcw } from "lucide-react";
 
 interface GameCardProps {
   question: Question;
@@ -9,6 +9,7 @@ interface GameCardProps {
   isComplete: boolean;
   onSelect: () => void;
   onReview?: () => void;
+  onReset?: () => void;
   compact?: boolean;
 }
 
@@ -18,17 +19,23 @@ export const GameCard = ({
   isComplete,
   onSelect,
   onReview,
+  onReset,
   compact = false,
 }: GameCardProps) => {
+  const handleReset = (e: React.MouseEvent) => {
+    e.stopPropagation();
+    onReset?.();
+  };
+
   if (isRevealed) {
     return (
-      <button
-        onClick={onReview}
-        className={`w-full h-full rounded-md flex flex-col items-center justify-center gap-0.5 transition-all group cursor-pointer ${
+      <div
+        className={`w-full h-full rounded-md flex flex-col items-center justify-center gap-0.5 transition-all group cursor-pointer relative ${
           isComplete 
             ? "bg-success/20 border border-success/30 hover:bg-success/30" 
             : "bg-destructive/20 border border-destructive/30 hover:bg-destructive/30"
         }`}
+        onClick={onReview}
       >
         {isComplete ? (
           <>
@@ -41,7 +48,16 @@ export const GameCard = ({
             <Eye className={`${compact ? "w-2 h-2" : "w-2.5 h-2.5"} text-muted-foreground opacity-0 group-hover:opacity-100 transition-opacity`} />
           </>
         )}
-      </button>
+        
+        {/* Reset button - appears on hover */}
+        <button
+          onClick={handleReset}
+          className={`absolute ${compact ? "top-0.5 right-0.5" : "top-1 right-1"} p-0.5 rounded bg-background/80 hover:bg-background opacity-0 group-hover:opacity-100 transition-opacity border border-border`}
+          title="Reset this question"
+        >
+          <RotateCcw className={`${compact ? "w-2 h-2" : "w-2.5 h-2.5"} text-muted-foreground`} />
+        </button>
+      </div>
     );
   }
 
