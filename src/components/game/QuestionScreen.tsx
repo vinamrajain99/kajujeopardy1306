@@ -37,7 +37,7 @@ export const QuestionScreen = ({
   // Timer state
   const [timeLeft, setTimeLeft] = useState(settings.timerDuration);
   const [timerPaused, setTimerPaused] = useState(false);
-  const timerRef = useRef<NodeJS.Timeout | null>(null);
+  const timerRef = useRef<ReturnType<typeof setTimeout> | null>(null);
 
   useEffect(() => {
     if (question.images.length > 1) {
