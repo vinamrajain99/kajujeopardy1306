@@ -5,8 +5,9 @@ import { getActiveSession, restartGameSession } from "@/lib/gameSession";
 import { useRealtimeSync } from "@/hooks/useRealtimeSync";
 import { GameEditor } from "./GameEditor";
 import { Button } from "@/components/ui/button";
-import { Plus, Trash2, Edit, Play, ArrowLeft, Settings, Save, Palette, Timer, Users, RotateCcw } from "lucide-react";
+import { Plus, Trash2, Edit, Play, ArrowLeft, Settings, Save, Palette, Timer, Users, RotateCcw, LogOut } from "lucide-react";
 import { toast } from "sonner";
+import { supabase } from "@/integrations/supabase/client";
 
 const COLOR_THEMES: { id: ColorTheme; name: string; colors: string[] }[] = [
   { id: 'babyShower', name: 'Rose Pink', colors: ['#FFB6C1', '#87CEEB', '#FFFACD', '#98FB98', '#E6E6FA'] },
@@ -414,6 +415,17 @@ export const AdminDashboard = ({ onPlayGame, onBack }: AdminDashboardProps) => {
             <Button variant="gold" onClick={handleCreateGame}>
               <Plus className="w-5 h-5 mr-2" />
               New Game
+            </Button>
+            <Button
+              variant="outline"
+              onClick={async () => {
+                await supabase.auth.signOut();
+                toast.success("Signed out");
+                onBack();
+              }}
+            >
+              <LogOut className="w-4 h-4 mr-2" />
+              Sign out
             </Button>
           </div>
         </div>

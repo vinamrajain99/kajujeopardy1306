@@ -1,14 +1,14 @@
 import { useState, useEffect, useCallback } from "react";
+import { useNavigate } from "react-router-dom";
 import { GameVersion, HomeScreenImage, HomeScreenSettings } from "@/types/game";
 import { getStoredGames, getGlobalSettings } from "@/lib/storage";
 import { useRealtimeSync } from "@/hooks/useRealtimeSync";
 import { GameBoard } from "@/components/game/GameBoard";
-import { AdminDashboard } from "@/components/admin/AdminDashboard";
 import { Button } from "@/components/ui/button";
 import { Dialog, DialogContent, DialogHeader, DialogTitle } from "@/components/ui/dialog";
 import { Play, Settings, Sparkles } from "lucide-react";
 
-type View = "home" | "game" | "admin";
+type View = "home" | "game";
 
 const IMAGE_EMOJIS: Record<HomeScreenImage, string> = {
   baby: '👶',
@@ -24,6 +24,7 @@ const IMAGE_EMOJIS: Record<HomeScreenImage, string> = {
 };
 
 const Index = () => {
+  const navigate = useNavigate();
   const [view, setView] = useState<View>("home");
   const [selectedGame, setSelectedGame] = useState<GameVersion | null>(null);
   const [showGameSelector, setShowGameSelector] = useState(false);
@@ -61,7 +62,7 @@ const Index = () => {
   const handleSelectGameToPlay = async () => {
     const games = await getStoredGames();
     if (games.length === 0) {
-      setView("admin");
+      navigate("/admin");
       return;
     }
     if (games.length === 1) {
@@ -85,14 +86,6 @@ const Index = () => {
     );
   }
 
-  if (view === "admin") {
-    return (
-      <AdminDashboard
-        onPlayGame={handlePlayGame}
-        onBack={() => setView("home")}
-      />
-    );
-  }
 
   if (isLoading) {
     return (
@@ -163,7 +156,7 @@ const Index = () => {
           <Button
             variant="ghost"
             size="sm"
-            onClick={() => setView("admin")}
+            onClick={() => navigate("/admin")}
             className="text-muted-foreground hover:text-foreground"
           >
             <Settings className="w-4 h-4 mr-1" />
