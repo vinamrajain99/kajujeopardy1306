@@ -1,6 +1,7 @@
 import { GameVersion, GlobalSettings, HomeScreenSettings } from "@/types/game";
 import { supabase } from "@/integrations/supabase/client";
 import type { Json } from "@/integrations/supabase/types";
+import { callAdminAction } from "@/lib/adminAuth";
 
 const SETTINGS_KEY = "global_settings";
 
@@ -42,27 +43,11 @@ export const getStoredGames = async (): Promise<GameVersion[]> => {
 
 export const saveGame = async (game: GameVersion): Promise<void> => {
   const dbGame = gameToDb(game);
-  
-  const { error } = await supabase
-    .from("games")
-    .upsert(dbGame, { onConflict: "id" });
-
-  if (error) {
-    console.error("Error saving game:", error);
-    throw error;
-  }
+  await callAdminAction({ type: "save_game", game: dbGame as unknown as Record<string, unknown> });
 };
 
 export const deleteGame = async (gameId: string): Promise<void> => {
-  const { error } = await supabase
-    .from("games")
-    .delete()
-    .eq("id", gameId);
-
-  if (error) {
-    console.error("Error deleting game:", error);
-    throw error;
-  }
+  await callAdminAction({ type: "delete_game", gameId });
 };
 
 export const getGameById = async (gameId: string): Promise<GameVersion | null> => {
@@ -212,15 +197,9 @@ export const getGlobalSettings = async (): Promise<GlobalSettings> => {
 };
 
 export const saveGlobalSettings = async (settings: GlobalSettings): Promise<void> => {
-  const { error } = await supabase
-    .from("settings")
-    .upsert(
-      { key: SETTINGS_KEY, value: settings as unknown as Json },
-      { onConflict: "key" }
-    );
-
-  if (error) {
-    console.error("Error saving settings:", error);
-    throw error;
-  }
+  await callAdminAction({
+    type: "save_settings",
+    key: SETTINGS_KEY,
+    value: settings as unknown as Json,
+  });
 };
