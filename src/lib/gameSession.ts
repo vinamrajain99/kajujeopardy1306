@@ -1,5 +1,6 @@
 import { supabase } from "@/integrations/supabase/client";
 import type { Json } from "@/integrations/supabase/types";
+import { callAdminAction } from "@/lib/adminAuth";
 
 export interface GameSession {
   id: string;
@@ -119,18 +120,9 @@ export const endGameSession = async (sessionId: string): Promise<void> => {
   }
 };
 
-// Reset/restart a game session (delete the active one)
+// Reset/restart a game session (delete the active one) — admin only
 export const restartGameSession = async (gameId: string): Promise<void> => {
-  const { error } = await supabase
-    .from("game_sessions")
-    .delete()
-    .eq("game_id", gameId)
-    .eq("is_active", true);
-
-  if (error) {
-    console.error("Error restarting session:", error);
-    throw error;
-  }
+  await callAdminAction({ type: "restart_session", gameId });
 };
 
 // Get all sessions for a game (for history)

@@ -7,7 +7,7 @@ import { GameEditor } from "./GameEditor";
 import { Button } from "@/components/ui/button";
 import { Plus, Trash2, Edit, Play, ArrowLeft, Settings, Save, Palette, Timer, Users, RotateCcw, LogOut } from "lucide-react";
 import { toast } from "sonner";
-import { supabase } from "@/integrations/supabase/client";
+import { clearAdminPassword } from "@/lib/adminAuth";
 
 const COLOR_THEMES: { id: ColorTheme; name: string; colors: string[] }[] = [
   { id: 'babyShower', name: 'Rose Pink', colors: ['#FFB6C1', '#87CEEB', '#FFFACD', '#98FB98', '#E6E6FA'] },
@@ -418,8 +418,8 @@ export const AdminDashboard = ({ onPlayGame, onBack }: AdminDashboardProps) => {
             </Button>
             <Button
               variant="outline"
-              onClick={async () => {
-                await supabase.auth.signOut();
+              onClick={() => {
+                clearAdminPassword();
                 toast.success("Signed out");
                 onBack();
               }}
